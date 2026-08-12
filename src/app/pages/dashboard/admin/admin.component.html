@@ -1,0 +1,338 @@
+<section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Admin Dashboard</h1>
+      <p class="page-sub">Overview of workshop activity and metrics</p>
+    </div>
+    
+
+
+  </div>
+
+  <!-- Summary cards -->
+  <div class="cards">
+    @for (card of cards(); track card.label) {
+      <article class="card clickable-card" (click)="onCardClick(card)">
+        <div class="card-top">
+          <span class="card-icon" [class]="'tone-' + card.tone">
+            <app-icon [name]="card.icon" [size]="22"></app-icon>
+          </span>
+          <span class="card-trend font-semibold">
+            {{ card.trend }}
+          </span>
+        </div>
+        <p class="card-value">{{ card.value }}</p>
+        <p class="card-label">{{ card.label }}</p>
+      </article>
+    }
+  </div><article class="card closed-card" [routerLink]="['/app/orders']" [queryParams]="{status: 'Closed'}">
+  <div class="closed-icon">
+    <app-icon name="check-circle" [size]="26"></app-icon>
+  </div>
+
+  <div class="closed-content">
+    <h2>{{ closedOrdersCount() }}</h2>
+    <p>Closed Orders</p>
+  </div>
+
+  <span class="status-badge">Closed</span>
+</article>
+  <!-- Admin Tabs Switcher -->
+  <div class="admin-tabs-bar">
+    <button type="button" class="admin-tab" [class.active]="currentAdminTab() === 'price-demand'" (click)="setAdminTab('price-demand')">
+      Price Demand <span class="count-badge tone-danger">{{ adminPriceDemand().length }}</span>
+    </button>
+    <button type="button" class="admin-tab" [class.active]="currentAdminTab() === 'payment-check'" (click)="setAdminTab('payment-check')">
+      Work in Progress <span class="count-badge tone-warning">{{ adminPaymentCheck().length }}</span>
+    </button>
+    <button type="button" class="admin-tab" [class.active]="currentAdminTab() === 'completed'" (click)="setAdminTab('completed')">
+       Completed  <span class="count-badge tone-success">{{ adminCompleted().length }}</span>
+    </button>
+  </div>
+
+  <!-- Layout: Active Admin Tab Panel -->
+  <div class="dashboard-grid admin-tab-content">
+    @switch (currentAdminTab()) {
+      @case ('price-demand') {
+        <!-- Price Demand Orders Panel -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Price Demand</h2>
+              <p class="panel-sub">Orders awaiting quote verification or price adjustments</p>
+            </div>
+            <span class="count-badge tone-danger">{{ adminPriceDemand().length }}</span>
+          </div>
+
+          @if (adminPriceDemand().length > 0) {
+            <div class="table-wrap">
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Mobile Model</th>
+                    <th>Technician</th>
+                    <th>Status</th>
+                    <th class="ta-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (order of adminPriceDemand(); track order.id) {
+                    <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                      <td class="mono">{{ order.id }}</td>
+                      <td>
+                        <div class="customer">
+                          <span class="avatar-sm">{{ order.initials }}</span>
+                          <span>{{ order.customer }}</span>
+                        </div>
+                      </td>
+                      <td>{{ order.model }}</td>
+                      <td>{{ order.technician }}</td>
+                      <td>
+                        <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                      </td>
+                      <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="order-cards">
+              @for (order of adminPriceDemand(); track order.id) {
+                <div class="order-card" (click)="viewOrderDetails(order.id)">
+                  <div class="order-card-head">
+                    <div class="customer">
+                      <span class="avatar-sm">{{ order.initials }}</span>
+                      <div>
+                        <p class="oc-name">{{ order.customer }}</p>
+                        <p class="oc-id mono">{{ order.id }}</p>
+                      </div>
+                    </div>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </div>
+                  <div class="order-card-body">
+                    <div><span class="oc-key">Model</span><span>{{ order.model }}</span></div>
+                    <div><span class="oc-key">Technician</span><span>{{ order.technician }}</span></div>
+                    <div><span class="oc-key">Amount</span><span class="amount">{{ formatAmount(order.amount) }}</span></div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-list-msg">
+              <p>No orders currently in Price Demand.</p>
+            </div>
+          }
+        </div>
+      }
+
+      @case ('payment-check') {
+        <!-- work Panel -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">work in progress</h2>
+              <p class="panel-sub">Finished jobs awaiting billing validation and service check</p>
+            </div>
+            <span class="count-badge tone-warning">{{ adminPaymentCheck().length }}</span>
+          </div>
+
+          @if (adminPaymentCheck().length > 0) {
+            <div class="table-wrap">
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Mobile Model</th>
+                    <th>Technician</th>
+                    <th>Status</th>
+                    <th class="ta-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (order of adminPaymentCheck(); track order.id) {
+                    <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                      <td class="mono">{{ order.id }}</td>
+                      <td>
+                        <div class="customer">
+                          <span class="avatar-sm">{{ order.initials }}</span>
+                          <span>{{ order.customer }}</span>
+                        </div>
+                      </td>
+                      <td>{{ order.model }}</td>
+                      <td>{{ order.technician }}</td>
+                      <td>
+                        <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                      </td>
+                      <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="order-cards">
+              @for (order of adminPaymentCheck(); track order.id) {
+                <div class="order-card" (click)="viewOrderDetails(order.id)">
+                  <div class="order-card-head">
+                    <div class="customer">
+                      <span class="avatar-sm">{{ order.initials }}</span>
+                      <div>
+                        <p class="oc-name">{{ order.customer }}</p>
+                        <p class="oc-id mono">{{ order.id }}</p>
+                      </div>
+                    </div>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </div>
+                  <div class="order-card-body">
+                    <div><span class="oc-key">Model</span><span>{{ order.model }}</span></div>
+                    <div><span class="oc-key">Technician</span><span>{{ order.technician }}</span></div>
+                    <div><span class="oc-key">Amount</span><span class="amount">{{ formatAmount(order.amount) }}</span></div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-list-msg">
+              <p>No orders pending work.</p>
+            </div>
+          }
+        </div>
+      }
+
+      @case ('completed') {
+        <!-- Completed Panel -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Completed</h2>
+              <p class="panel-sub">Jobs finished and marked complete, awaiting closure</p>
+            </div>
+            <span class="count-badge tone-success">{{ adminCompletedOnly().length }}</span>
+          </div>
+
+          @if (adminCompletedOnly().length > 0) {
+            <div class="table-wrap">
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Mobile Model</th>
+                    <th>Technician</th>
+                    <th>Status</th>
+                    <th class="ta-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (order of adminCompletedOnly(); track order.id) {
+                    <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                      <td class="mono">{{ order.id }}</td>
+                      <td>
+                        <div class="customer">
+                          <span class="avatar-sm">{{ order.initials }}</span>
+                          <span>{{ order.customer }}</span>
+                        </div>
+                      </td>
+                      <td>{{ order.model }}</td>
+                      <td>{{ order.technician }}</td>
+                      <td>
+                        <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                      </td>
+                      <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="order-cards">
+              @for (order of adminCompletedOnly(); track order.id) {
+                <div class="order-card" (click)="viewOrderDetails(order.id)">
+                  <div class="order-card-head">
+                    <div class="customer">
+                      <span class="avatar-sm">{{ order.initials }}</span>
+                      <div>
+                        <p class="oc-name">{{ order.customer }}</p>
+                        <p class="oc-id mono">{{ order.id }}</p>
+                      </div>
+                    </div>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </div>
+                  <div class="order-card-body">
+                    <div><span class="oc-key">Model</span><span>{{ order.model }}</span></div>
+                    <div><span class="oc-key">Technician</span><span>{{ order.technician }}</span></div>
+                    <div><span class="oc-key">Amount</span><span class="amount">{{ formatAmount(order.amount) }}</span></div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-list-msg">
+              <p>No completed orders found.</p>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- ===== Personnel Picker Modal ===== -->
+  @if (showPersonnelModal()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-sheet" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <div class="modal-icon-wrap">
+              @if (modalTargetDashboardRole() === 'receptionist') {
+                <app-icon name="clock" [size]="20"></app-icon>
+              } @else if (modalTargetDashboardRole() === 'technician') {
+                <app-icon name="wrench" [size]="20"></app-icon>
+              } @else {
+                <app-icon name="user" [size]="20"></app-icon>
+              }
+            </div>
+            <div>
+              <h2 class="modal-title">Select {{ modalTargetRole() }}</h2>
+              <p class="modal-sub">Choose a personnel to view their dashboard</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeModal()">
+            <app-icon name="close" [size]="18"></app-icon>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          @if (modalPersonnel().length === 0) {
+            <div class="modal-empty">
+              <app-icon name="user" [size]="32"></app-icon>
+              <p>No {{ modalTargetRole() }} personnel found.</p>
+            </div>
+          } @else {
+            <div class="personnel-list">
+              @for (person of modalPersonnel(); track person.id) {
+                <button type="button" class="personnel-item" (click)="selectPersonnel(person)">
+                  <span class="personnel-avatar" [class]="'avatar-' + modalTargetDashboardRole()">
+                    {{ getPersonnelInitials(person.name) }}
+                  </span>
+                  <div class="personnel-info">
+                    <span class="personnel-name">{{ person.name }}</span>
+                    <span class="personnel-meta">{{ person.id }} &middot; {{ person.email }}</span>
+                  </div>
+                  <span class="personnel-status-dot" [class.active]="person.status === 'Active'"></span>
+                  <span class="personnel-status-label" [class.active]="person.status === 'Active'">
+                    {{ person.status }}
+                  </span>
+                  <app-icon name="chevron-right" [size]="16" class="personnel-arrow"></app-icon>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</section>

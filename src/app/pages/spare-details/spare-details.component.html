@@ -1,0 +1,95 @@
+<section class="page">
+  <div class="back-nav">
+    <a routerLink="/app/dashboard" class="back-link">
+      <app-icon name="chevron-left" [size]="16" [strokeWidth]="3"></app-icon>
+      Back to Dashboard
+    </a>
+  </div>
+
+  @if (spare()) {
+    @let s = spare()!;
+    <div class="detail-header">
+      <div class="dh-left">
+        <span class="avatar-lg"><app-icon name="package" [size]="28"></app-icon></span>
+        <div>
+          <div class="dh-title-row">
+            <h1 class="dh-id">{{ s.name }}</h1>
+            <span class="status" [class]="statusClass(s.status)">{{ s.status }}</span>
+          </div>
+          <p class="dh-subtitle">SKU: {{ s.sku }} &bull; Compartment: {{ s.location }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Left Column: Specs & Use -->
+      <div class="grid-left">
+        <div class="panel p-24">
+          <h2 class="section-title">
+            <app-icon name="settings" class="sec-icon" [size]="18"></app-icon>
+            Part Description & Specifications
+          </h2>
+          <div class="info-block">
+            <span class="info-label">Full Description</span>
+            <p class="desc-text">{{ s.description }}</p>
+          </div>
+          
+          <div class="info-block" style="margin-top: 24px;">
+            <span class="info-label">Model Compatibility</span>
+            <div class="compatibility-tag">
+              <app-icon name="wrench" [size]="14"></app-icon>
+              {{ s.modelCompatibility }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Inventory metrics -->
+      <div class="grid-right">
+        <div class="panel p-24">
+          <h2 class="section-title">
+            <app-icon name="package" class="sec-icon" [size]="18"></app-icon>
+            Stock Analytics
+          </h2>
+          
+          <div class="stock-item-row">
+            <div class="stock-meta-item">
+              <span class="meta-lbl">Unit Cost</span>
+              <span class="meta-val price-text">{{ formatPrice(s.price) }}</span>
+            </div>
+            <div class="stock-meta-item">
+              <span class="meta-lbl">Current Stock</span>
+              <span class="meta-val" [class.danger-val]="s.stock === 0" [class.warning-val]="s.stock > 0 && s.stock <= 15">{{ s.stock }} units</span>
+            </div>
+          </div>
+
+          <div class="details-divider"></div>
+
+          <div class="supplier-info">
+            <div class="sip-row">
+              <span class="sip-lbl">Warehouse Location:</span>
+              <span class="sip-val font-semibold">{{ s.location }}</span>
+            </div>
+            <div class="sip-row">
+              <span class="sip-lbl">Hardware Supplier:</span>
+              <span class="sip-val">{{ s.supplier }}</span>
+            </div>
+            <div class="sip-row">
+              <span class="sip-lbl">Supplier Warranty:</span>
+              <span class="sip-val">{{ s.warranty }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-detail">
+      <span class="empty-icon"><app-icon name="package" [size]="36"></app-icon></span>
+      <h2>Part Entry Not Found</h2>
+      <p>The spare part ID you are requesting is missing from the workshop catalog database.</p>
+      <a routerLink="/app/dashboard" class="btn-clear text-center" style="display:inline-block; margin-top: 16px;">
+        Back to Dashboard
+      </a>
+    </div>
+  }
+</section>

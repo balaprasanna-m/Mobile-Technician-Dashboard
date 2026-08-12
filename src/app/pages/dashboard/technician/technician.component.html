@@ -1,0 +1,97 @@
+<section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">
+        Technician Workbench
+        @if (authService.selectedPersonnel()) {
+          <span class="viewing-person-chip">&mdash; {{ authService.selectedPersonnel()!.name }}</span>
+        }
+      </h1>
+      <p class="page-sub">Active repairs workbench
+        @if (authService.selectedPersonnel(); as p) { for {{ p.name }} }
+        @else { for assigned technician }
+      </p>
+    </div>
+   
+  </div>
+
+  @if (authService.role() === 'admin') {
+    <div class="sub-head-nav">
+      <button type="button" class="back-to-admin-btn" (click)="switchView('admin')">
+        <app-icon name="chevron-left" [size]="14"></app-icon> Back to Admin Overview
+      </button>
+
+      @if (authService.selectedPersonnel(); as person) {
+        <div class="viewing-banner">
+          <span class="viewing-avatar">{{ getInitials(person.name) }}</span>
+          <div>
+            <span class="viewing-label">Viewing Dashboard for</span>
+            <span class="viewing-name">{{ person.name }}</span>
+          </div>
+          <span class="viewing-role-badge">{{ person.role }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Technician summary metrics -->
+  <div class="cards mini-cards">
+   
+    <article class="card">
+      <p class="card-value">{{ technicianWip().length }}</p>
+      <p class="card-label">Work in Progress</p>
+    </article>
+ 
+  </div>
+
+  <div class="dashboard-grid">
+    
+   
+
+    <!-- Work in Progress Panel -->
+    <div class="panel mt-24">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">Work in Progress</h2>
+          <p class="panel-sub">Active repairs undergoing service/disassembly</p>
+        </div>
+        <span class="count-badge tone-warning">{{ technicianWip().length }}</span>
+      </div>
+
+      @if (technicianWip().length > 0) {
+        <div class="table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Mobile Model</th>
+                <th>Diagnosis Notes</th>
+                <th>Status</th>
+                <th class="ta-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of technicianWip(); track order.id) {
+                <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                  <td class="mono">{{ order.id }}</td>
+                  <td>{{ order.customer }}</td>
+                  <td>{{ order.model }}</td>
+                  <td class="text-truncate" style="max-width: 220px;">{{ order.diagnosisNotes }}</td>
+                  <td>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </td>
+                  <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-list-msg"><p>No active repairs in progress.</p></div>
+      }
+    </div>
+
+
+  </div>
+</section>

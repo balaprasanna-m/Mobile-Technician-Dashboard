@@ -1,0 +1,160 @@
+<section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">
+        Officer Control Console
+        @if (authService.selectedPersonnel()) {
+          <span class="viewing-person-chip">&mdash; {{ authService.selectedPersonnel()!.name }}</span>
+        }
+      </h1>
+      <p class="page-sub">Inventory verification, pricing checks and approvals</p>
+    </div>
+    
+    @if (authService.role() === 'admin') {
+      <div class="head-actions">
+        <!-- Role Switcher Toolbar -->
+        <div class="role-selector-bar">
+          <button type="button" class="role-tab" (click)="switchView('admin')" title="Admin Dashboard">
+            <app-icon name="dashboard" [size]="14"></app-icon> Admin
+          </button>
+          <button type="button" class="role-tab" (click)="switchView('receptionist')" title="Receptionist Dashboard">
+            <app-icon name="clock" [size]="14"></app-icon> Receptionist
+          </button>
+          <button type="button" class="role-tab" (click)="switchView('technician')" title="Technician Dashboard">
+            <app-icon name="wrench" [size]="14"></app-icon> Technician
+          </button>
+          <button type="button" class="role-tab active" (click)="switchView('officer')" title="Officer Dashboard">
+            <app-icon name="user" [size]="14"></app-icon> Officer
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (authService.role() === 'admin') {
+    <div class="sub-head-nav">
+      <button type="button" class="back-to-admin-btn" (click)="switchView('admin')">
+        <app-icon name="chevron-left" [size]="14"></app-icon> Back to Admin Overview
+      </button>
+
+      @if (authService.selectedPersonnel(); as person) {
+        <div class="viewing-banner">
+          <span class="viewing-avatar">{{ getInitials(person.name) }}</span>
+          <div>
+            <span class="viewing-label">Viewing Dashboard for</span>
+            <span class="viewing-name">{{ person.name }}</span>
+          </div>
+          <span class="viewing-role-badge">{{ person.role }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Officer summary metrics -->
+  <div class="cards mini-cards">
+    <article class="card">
+      <p class="card-value">{{ officerAssigned().length }}</p>
+      <p class="card-label">Request for spare</p>
+    </article>
+    <article class="card">
+      <p class="card-value">{{ officerSpares().length }}</p>
+      <p class="card-label">Waiting  for Spare </p>
+    </article>
+  </div>
+
+  <div class="dashboard-grid">
+    
+    <!-- Assigned Orders Panel -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">Request for Spare</h2>
+          <p class="panel-sub">Complex repairs assigned to officer Yaw B.</p>
+        </div>
+        <span class="count-badge tone-danger">{{ officerAssigned().length }}</span>
+      </div>
+
+      @if (officerAssigned().length > 0) {
+        <div class="table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Mobile Model</th>
+                <th>Issue</th>
+                <th>Status</th>
+                <th class="ta-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of officerAssigned(); track order.id) {
+                <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                  <td class="mono">{{ order.id }}</td>
+                  <td>{{ order.customer }}</td>
+                  <td>{{ order.model }}</td>
+                  <td class="text-truncate" style="max-width: 250px;">{{ order.issue }}</td>
+                  <td>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </td>
+                  <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-list-msg"><p>No orders assigned to you.</p></div>
+      }
+    </div>
+
+    <!-- Request for Spare Orders Panel -->
+    <div class="panel mt-24">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">Waiting for Spare</h2>
+          <p class="panel-sub">Workshop-wide parts requests awaiting officer inventory verification</p>
+        </div>
+        <span class="count-badge tone-danger">{{ officerSpares().length }}</span>
+      </div>
+
+      @if (officerSpares().length > 0) {
+        <div class="table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Technician</th>
+                <th>Model Compatibility</th>
+                <th>Requested Spare Parts</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of officerSpares(); track order.id) {
+                <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                  <td class="mono">{{ order.id }}</td>
+                  <td>{{ order.technician }}</td>
+                  <td>{{ order.model }}</td>
+                  <td>
+                    @for (part of order.spareParts; track part.name) {
+                      <span class="chip-part">{{ part.name }} (x{{ part.qty }})</span>
+                    } @empty {
+                      <span class="text-muted">Unspecified parts request</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-list-msg"><p>No pending workshop spares requests to verify.</p></div>
+      }
+    </div>
+
+  </div>
+</section>

@@ -1,0 +1,152 @@
+<div class="shell" [class.collapsed]="collapsed()">
+  <!-- ===== Sidebar (desktop) ===== -->
+  <aside class="sidebar" [class.mobile-open]="mobileOpen()">
+    <div class="sidebar-head">
+      <div class="brand">
+        <img src="assets/logo.png" alt="TechFix logo" class="brand-logo" />
+        @if (!collapsed()) {
+          <div class="brand-text">
+            <span class="brand-name">ITechnix</span>
+            <span class="brand-tag">Workshop Admin</span>
+          </div>
+        }
+      </div>
+      <button type="button" class="collapse-btn desktop-only" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+        <app-icon [name]="collapsed() ? 'chevron-right' : 'chevron-left'" [size]="18"></app-icon>
+      </button>
+    </div>
+
+    <!-- Sidebar Quick Action Button -->
+    <div class="sidebar-action" [class.collapsed-action]="collapsed()">
+     
+    </div>
+
+    <nav class="nav">
+      @for (item of navItems(); track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="nav-item"
+          (click)="closeMobile()"
+          [attr.title]="collapsed() ? item.label : null"
+        >
+          <span class="nav-icon"><app-icon [name]="item.icon" [size]="20"></app-icon></span>
+          @if (!collapsed()) {
+            <span class="nav-label">{{ item.label }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-foot">
+      <button type="button" class="nav-item logout" (click)="logout()" [attr.title]="collapsed() ? 'Logout' : null">
+        <span class="nav-icon"><app-icon name="logout" [size]="20"></app-icon></span>
+        @if (!collapsed()) { <span class="nav-label">Logout</span> }
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile overlay -->
+  @if (mobileOpen()) {
+    <div class="overlay" (click)="closeMobile()"></div>
+  }
+
+  <!-- ===== Main column ===== -->
+  <div class="main">
+    <!-- Top navbar -->
+    <header class="navbar">
+      <div class="navbar-left">
+        <button type="button" class="icon-btn mobile-only" (click)="toggleMobile()" aria-label="Open menu">
+          <app-icon name="menu" [size]="22"></app-icon>
+        </button>
+        <div class="search">
+          <app-icon name="search" [size]="18"></app-icon>
+          <input type="text" placeholder="Search orders, customers…" aria-label="Search" />
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <!-- New Order Button -->
+        
+
+        <button type="button" class="icon-btn" (click)="toggleTheme()" aria-label="Toggle theme">
+          <app-icon [name]="themeService.theme() === 'dark' ? 'sun' : 'moon'" [size]="20"></app-icon>
+        </button>
+
+        <div class="has-popover">
+          <button type="button" class="icon-btn" (click)="toggleNotif()" aria-label="Notifications">
+            <app-icon name="bell" [size]="20"></app-icon>
+            <span class="badge-dot"></span>
+          </button>
+          @if (notifOpen()) {
+            <div class="popover">
+              <div class="popover-head">Notifications</div>
+              <div class="notif">
+                <span class="notif-dot info"></span>
+                <div>
+                  <p class="notif-title">New order assigned</p>
+                  <p class="notif-sub">Order #1042 — iPhone 14 Pro</p>
+                </div>
+              </div>
+              <div class="notif">
+                <span class="notif-dot success"></span>
+                <div>
+                  <p class="notif-title">Payment received</p>
+                  <p class="notif-sub">$120.00 from R. Mensah</p>
+                </div>
+              </div>
+              <div class="notif">
+                <span class="notif-dot warning"></span>
+                <div>
+                  <p class="notif-title">Low spare parts</p>
+                  <p class="notif-sub">Samsung S22 screen — 3 left</p>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="has-popover">
+          <button type="button" class="profile-btn" (click)="toggleProfile()" aria-label="Profile menu">
+            <span class="avatar">AD</span>
+            <span class="profile-meta desktop-only">
+              <span class="profile-name">Amara Diallo</span>
+              <span class="profile-role">Administrator</span>
+            </span>
+          </button>
+          @if (profileOpen()) {
+            <div class="popover popover-right">
+              <a routerLink="/app/profile" class="menu-row" (click)="toggleProfile()">
+                <app-icon name="user" [size]="18"></app-icon><span>My Profile</span>
+              </a>
+              <a routerLink="/app/payments" class="menu-row" (click)="toggleProfile()">
+                <app-icon name="settings" [size]="18"></app-icon><span>Settings</span>
+              </a>
+              <button type="button" class="menu-row danger" (click)="logout()">
+                <app-icon name="logout" [size]="18"></app-icon><span>Logout</span>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <!-- Routed content -->
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- ===== Mobile bottom navigation ===== -->
+  <nav class="bottom-nav">
+    @for (item of bottomNavItems(); track item.route) {
+      <a [routerLink]="item.route" routerLinkActive="active" class="bottom-item">
+        <app-icon [name]="item.icon" [size]="22"></app-icon>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+
+  <!-- ===== New Order Modal ===== -->
+ 
+</div>

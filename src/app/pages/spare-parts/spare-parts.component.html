@@ -1,0 +1,247 @@
+<section class="page">
+
+  <!-- Page Header -->
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Spare Parts Inventory</h1>
+      <p class="page-sub">Manage and monitor workshop maintenance stock levels</p>
+    </div>
+    <button class="btn-add-spare" id="btn-open-add-spare" (click)="openAddForm()">
+      <app-icon name="plus" [size]="15"></app-icon>
+      Add Spare Part
+    </button>
+  </div>
+
+  <!-- Success Toast -->
+  @if (addSuccess()) {
+    <div class="save-toast" role="status">
+      <app-icon name="check-circle" [size]="16"></app-icon>
+      Spare part added successfully!
+    </div>
+  }
+
+  <!-- ══ Add Spare Part Form ══ -->
+  @if (showAddForm()) {
+    <div class="add-form-panel panel">
+      <div class="afp-header">
+        <span class="afp-title">
+          <app-icon name="package" [size]="16"></app-icon>
+          New Spare Part
+        </span>
+        <button class="afp-close" type="button" (click)="closeAddForm()">
+          <app-icon name="x" [size]="15"></app-icon>
+        </button>
+      </div>
+
+      @if (addError()) {
+        <div class="afp-error">
+          <app-icon name="alert-circle" [size]="14"></app-icon>
+          {{ addError() }}
+        </div>
+      }
+
+      <div class="afp-grid">
+        <div class="afp-field afp-wide">
+          <label class="afp-label">Part Name *</label>
+          <input class="afp-input" type="text" placeholder="e.g. OEM iPhone 14 Pro OLED Display"
+            [value]="addForm().name" (input)="patchForm({ name: $any($event.target).value })" />
+        </div>
+
+        <div class="afp-field">
+          <label class="afp-label">SKU *</label>
+          <input class="afp-input" type="text" placeholder="e.g. DSP-IP14P-02"
+            [value]="addForm().sku" (input)="patchForm({ sku: $any($event.target).value })" />
+        </div>
+
+        <div class="afp-field">
+          <label class="afp-label">Model Compatibility *</label>
+          <input class="afp-input" type="text" placeholder="e.g. iPhone 14 Pro"
+            [value]="addForm().modelCompatibility" (input)="patchForm({ modelCompatibility: $any($event.target).value })" />
+        </div>
+
+        <div class="afp-field">
+          <label class="afp-label">Stock (units)</label>
+          <input class="afp-input" type="number" min="0"
+            [value]="addForm().stock" (input)="patchForm({ stock: +$any($event.target).value })" />
+        </div>
+
+        <div class="afp-field">
+          <label class="afp-label">Price ($)</label>
+          <input class="afp-input" type="number" min="0" step="0.01" placeholder="0.00"
+            [value]="addForm().price" (input)="patchForm({ price: +$any($event.target).value })" />
+        </div>
+
+        <div class="afp-field">
+          <label class="afp-label">Status</label>
+          <select class="afp-select"
+            [value]="addForm().status" (change)="patchForm({ status: $any($event.target).value })">
+            <option value="In Stock">In Stock</option>
+            <option value="Low Stock">Low Stock</option>
+            <option value="Out of Stock">Out of Stock</option>
+          </select>
+        </div>
+
+        <div class="afp-field">
+          <label class="afp-label">Location / Bin</label>
+          <input class="afp-input" type="text" placeholder="e.g. Bin A4-Shelf 2"
+            [value]="addForm().location" (input)="patchForm({ location: $any($event.target).value })" />
+        </div>
+
+        <div class="afp-field">
+          <label class="afp-label">Supplier</label>
+          <input class="afp-input" type="text" placeholder="e.g. OEM Direct Parts Inc."
+            [value]="addForm().supplier" (input)="patchForm({ supplier: $any($event.target).value })" />
+        </div>
+
+        <div class="afp-field">
+          <label class="afp-label">Warranty</label>
+          <input class="afp-input" type="text" placeholder="e.g. 6 Months"
+            [value]="addForm().warranty" (input)="patchForm({ warranty: $any($event.target).value })" />
+        </div>
+
+        <div class="afp-field afp-wide">
+          <label class="afp-label">Description</label>
+          <textarea class="afp-input afp-textarea" rows="2" placeholder="Optional details about this part..."
+            [value]="addForm().description" (input)="patchForm({ description: $any($event.target).value })"></textarea>
+        </div>
+      </div>
+
+      <div class="afp-actions">
+        <button class="btn-cancel-afp" type="button" (click)="closeAddForm()">Cancel</button>
+        <button class="btn-submit-afp" type="button" (click)="submitAdd()">
+          <app-icon name="check-circle" [size]="15"></app-icon>
+          Save Spare Part
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ══ Filter & Table Panel ══ -->
+  <div class="panel">
+
+    <!-- Toolbar: search + filter pills + sort -->
+    <div class="panel-toolbar">
+      <!-- Search -->
+      <div class="search-wrap">
+        <app-icon name="search" [size]="15" class="search-icon"></app-icon>
+        <input
+          class="search-input"
+          type="text"
+          placeholder="Search name, SKU, model, supplier..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+        @if (searchQuery()) {
+          <button class="search-clear" type="button" (click)="searchQuery.set('')">
+            <app-icon name="x" [size]="13"></app-icon>
+          </button>
+        }
+      </div>
+
+      <!-- Status filter pills -->
+      <div class="filter-pills">
+        <button class="pill" [class.active]="statusFilter() === 'all'"           (click)="statusFilter.set('all')">All</button>
+        <button class="pill pill-in"  [class.active]="statusFilter() === 'In Stock'"      (click)="statusFilter.set('In Stock')">In Stock</button>
+        <button class="pill pill-low" [class.active]="statusFilter() === 'Low Stock'"     (click)="statusFilter.set('Low Stock')">Low Stock</button>
+        <button class="pill pill-out" [class.active]="statusFilter() === 'Out of Stock'"  (click)="statusFilter.set('Out of Stock')">Out of Stock</button>
+      </div>
+
+      <!-- Sort -->
+      <div class="sort-wrap">
+        <app-icon name="list" [size]="14" class="sort-icon"></app-icon>
+        <select class="sort-select"
+          [value]="sortBy()" (change)="sortBy.set($any($event.target).value)">
+          <option value="name">Name A–Z</option>
+          <option value="price-asc">Price ↑</option>
+          <option value="price-desc">Price ↓</option>
+          <option value="stock-asc">Stock ↑</option>
+          <option value="stock-desc">Stock ↓</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Result count -->
+    <div class="result-bar">
+      <span class="result-count">
+        Showing <strong>{{ filteredParts().length }}</strong> of {{ dataService.spareParts().length }} parts
+      </span>
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="table-wrap">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Part SKU</th>
+            <th>Part Name</th>
+            <th>Model Compatibility</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th class="ta-right">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (filteredParts().length === 0) {
+            <tr>
+              <td colspan="6" class="empty-row">
+                <app-icon name="package" [size]="20"></app-icon>
+                No spare parts match your search or filter.
+              </td>
+            </tr>
+          }
+          @for (part of filteredParts(); track part.id) {
+            <tr class="clickable-row" (click)="viewSpareDetails(part.id)">
+              <td class="mono">{{ part.sku }}</td>
+              <td>
+                <div class="spare-cell">
+                  <span class="spare-name">{{ part.name }}</span>
+                </div>
+              </td>
+              <td>{{ part.modelCompatibility }}</td>
+              <td [class.stock-low]="part.stock <= 10 && part.stock > 0"
+                  [class.stock-zero]="part.stock === 0">
+                {{ part.stock }} units
+              </td>
+              <td>
+                <span class="status" [class]="spareStatusClass(part.status)">{{ part.status }}</span>
+              </td>
+              <td class="ta-right amount">{{ formatPrice(part.price) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Cards -->
+    <div class="order-cards">
+      @if (filteredParts().length === 0) {
+        <div class="empty-mobile">
+          <app-icon name="package" [size]="24"></app-icon>
+          <span>No spare parts match your search.</span>
+        </div>
+      }
+      @for (part of filteredParts(); track part.id) {
+        <div class="order-card" (click)="viewSpareDetails(part.id)">
+          <div class="order-card-head">
+            <div>
+              <p class="oc-name">{{ part.name }}</p>
+              <p class="oc-id mono">{{ part.sku }}</p>
+            </div>
+            <span class="status" [class]="spareStatusClass(part.status)">{{ part.status }}</span>
+          </div>
+          <div class="order-card-body">
+            <div><span class="oc-key">Compatibility</span><span>{{ part.modelCompatibility }}</span></div>
+            <div><span class="oc-key">Stock</span>
+              <span [class.stock-low]="part.stock <= 10 && part.stock > 0"
+                    [class.stock-zero]="part.stock === 0">
+                {{ part.stock }} units
+              </span>
+            </div>
+            <div><span class="oc-key">Price</span><span class="amount">{{ formatPrice(part.price) }}</span></div>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+</section>

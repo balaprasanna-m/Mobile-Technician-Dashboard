@@ -1,0 +1,173 @@
+<section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">{{ title }}</h1>
+      <p class="page-sub">{{ subtitle }}</p>
+    </div>
+    <div class="head-actions">
+      <span class="count-badge">
+        {{ filteredOrders().length }} {{ filteredOrders().length === 1 ? 'Order' : 'Orders' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Search and filter controls -->
+  <div class="filters-card">
+    <div class="search-box">
+      <app-icon name="search" class="search-icon" [size]="18"></app-icon>
+      <input
+        type="text"
+        placeholder="Search by ID, customer name, phone, model..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+
+    <div class="filter-actions">
+   
+  @if (!isMyOrders) {
+    <div class="filter-actions">
+      <div class="select-wrapper">
+        <select
+          [ngModel]="selectedStatus()"
+          (ngModelChange)="selectedStatus.set($event)">
+          <option value="all">All Statuses</option>
+          @for (s of orderStatuses; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="select-wrapper">
+        <select
+          [ngModel]="sortBy()"
+          (ngModelChange)="sortBy.set($event)">
+          <option value="id-desc">Latest Order ID</option>
+          <option value="id-asc">Oldest Order ID</option>
+          <option value="date-desc">Recent Date</option>
+          <option value="amount-desc">Highest Amount</option>
+          <option value="amount-asc">Lowest Amount</option>
+        </select>
+      </div>
+    </div>
+  } @else {
+    <div class="my-order-tabs">
+  <button
+    class="tab-btn"
+    [class.active]="selectedMyOrderTab() === 'work'"
+    (click)="selectedMyOrderTab.set('work')">
+    Work
+  </button>
+
+  <button
+    class="tab-btn"
+    [class.active]="selectedMyOrderTab() === 'price'"
+    (click)="selectedMyOrderTab.set('price')">
+    Price Demand
+  </button>
+
+  <button
+    class="tab-btn"
+    [class.active]="selectedMyOrderTab() === 'completed'"
+    (click)="selectedMyOrderTab.set('completed')">
+    Completed Orders
+  </button>
+</div>
+  }
+    </div>
+  </div>
+
+  <!-- Orders Display -->
+  @if (filteredOrders().length > 0) {
+    <div class="panel">
+      <!-- Desktop Table -->
+      <div class="table-wrap">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Contact</th>
+              <th>Mobile Model</th>
+              <th>Technician</th>
+              <th>Status</th>
+              <th class="ta-right">Amount</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of filteredOrders(); track order.id) {
+              <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                <td class="mono">{{ order.id }}</td>
+                <td>
+                  <div class="customer">
+                    <span class="avatar-sm">{{ order.initials }}</span>
+                    <span class="customer-name">{{ order.customer }}</span>
+                  </div>
+                </td>
+                <td class="contact-col">
+                  <div class="contact-info">
+                    <span>{{ order.phone }}</span>
+                  </div>
+                </td>
+                <td>{{ order.model }}</td>
+                <td>
+                  <span class="tech-chip">
+                    <app-icon name="user" [size]="12"></app-icon>
+                    {{ order.technician }}
+                  </span>
+                </td>
+                <td>
+                  <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                </td>
+                <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                <td class="action-cell">
+                  <button class="btn-icon" aria-label="View order details">
+                    <app-icon name="chevron-right" [size]="16"></app-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile List -->
+      <div class="order-cards">
+        @for (order of filteredOrders(); track order.id) {
+          <div class="order-card" (click)="viewOrderDetails(order.id)">
+            <div class="order-card-head">
+              <div class="customer">
+                <span class="avatar-sm">{{ order.initials }}</span>
+                <div>
+                  <p class="oc-name">{{ order.customer }}</p>
+                  <p class="oc-id mono">{{ order.id }}</p>
+                </div>
+              </div>
+              <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+            </div>
+            <div class="order-card-body">
+              <div><span class="oc-key">Model</span><span>{{ order.model }}</span></div>
+              <div><span class="oc-key">Technician</span><span>{{ order.technician }}</span></div>
+              <div><span class="oc-key">Phone</span><span>{{ order.phone }}</span></div>
+              <div><span class="oc-key">Amount</span><span class="amount">{{ formatAmount(order.amount) }}</span></div>
+            </div>
+            <div class="order-card-foot">
+              <span class="view-details-link">View Details &rarr;</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <!-- Empty State -->
+    <div class="empty-state-card">
+      <span class="empty-icon"><app-icon name="search" [size]="32"></app-icon></span>
+      <h2>No orders found</h2>
+      <p>We couldn't find any orders matching "{{ searchQuery() }}" with the selected filters.</p>
+      <button class="btn-clear" (click)="searchQuery.set(''); selectedStatus.set('all')">
+        Clear filters
+      </button>
+    </div>
+  }
+</section>

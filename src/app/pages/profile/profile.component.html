@@ -1,0 +1,361 @@
+<section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Profile Hub</h1>
+      <p class="page-sub">
+        @if (canManageStaff()) { Manage your account and workshop personnel roster }
+        @else { Your account details and personal stats }
+      </p>
+    </div>
+  </div>
+
+  <!-- ── ADMIN VIEW ── -->
+  @if (canManageStaff()) {
+    <div class="profile-grid">
+
+      <!-- Left: Admin Card -->
+      <div class="profile-left">
+        <div class="panel user-card">
+          <div class="user-banner"></div>
+          <div class="user-avatar-wrap">
+            <span class="user-avatar">AD</span>
+          </div>
+          <div class="user-info">
+            <h2>Administrator</h2>
+            <p class="user-role">System Administrator</p>
+            <p class="user-meta">Admin Account &bull; Full Access</p>
+          </div>
+
+          <div class="user-stats">
+            @for (stat of stats; track stat.label) {
+              <div class="stat-item">
+                <span class="stat-count">{{ stat.count }}</span>
+                <span class="stat-label">{{ stat.label }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="contact-details">
+            <div class="cd-row">
+              <app-icon name="user" [size]="16"></app-icon>
+              <span>admin&#64;itechfinix.com</span>
+            </div>
+            <div class="cd-row">
+              <app-icon name="phone" [size]="16"></app-icon>
+              <span>+1 (555) 000-0001</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Personnel Directory -->
+      <div class="profile-right">
+        <div class="panel staff-panel">
+          <div class="panel-head-fl">
+            <div>
+              <h2 class="panel-title">Workshop Staff Directory</h2>
+              <p class="panel-sub">Manage and register personnel &amp; roles</p>
+            </div>
+            <button (click)="toggleAddForm()" class="btn-create">
+              <app-icon [name]="showForm() ? 'close' : 'user'" [size]="16"></app-icon>
+              {{ showForm() ? 'Cancel' : 'New Personnel' }}
+            </button>
+          </div>
+
+          <!-- ── Create Personnel Form ── -->
+          @if (showForm()) {
+            <div class="add-staff-form">
+              <h3>Add New Personnel</h3>
+              @if (formSubmitted()) {
+                <div class="success-alert">
+                  <app-icon name="check-circle" [size]="18"></app-icon>
+                  <span>Personnel created successfully!</span>
+                </div>
+              } @else {
+                <form (ngSubmit)="onSubmitStaff()" #staffForm="ngForm">
+
+                  <!-- Row 1: Name + Email -->
+                  <div class="form-row">
+                    <div class="form-group flex-1">
+                      <label for="staff-name">Full Name</label>
+                      <input id="staff-name" type="text" name="newName" [(ngModel)]="newName"
+                        placeholder="e.g. John Doe" required />
+                    </div>
+                    <div class="form-group flex-1">
+                      <label for="staff-email">Work Email</label>
+                      <input id="staff-email" type="email" name="newEmail" [(ngModel)]="newEmail"
+                        placeholder="e.g. john&#64;techfix.com" required />
+                    </div>
+                  </div>
+
+                  <!-- Row 2: Phone + Role -->
+                  <div class="form-row">
+                    <div class="form-group flex-1">
+                      <label for="staff-phone">Phone Number</label>
+                      <input id="staff-phone" type="tel" name="newPhone" [(ngModel)]="newPhone"
+                        placeholder="e.g. +1 (555) 000-1234" />
+                    </div>
+                    <div class="form-group flex-1">
+                      <label for="staff-role">Assigned Role</label>
+                      <div class="select-wrapper">
+                        <select id="staff-role" name="newRole" [(ngModel)]="newRole">
+                          @for (r of roles; track r) {
+                            <option [value]="r">{{ r }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Row 3: Password -->
+                  <div class="form-group">
+                    <label for="staff-password">Password</label>
+                    <div class="input-icon-wrap">
+                      <input
+                        id="staff-password"
+                        [type]="newPasswordVisible() ? 'text' : 'password'"
+                        name="newPassword"
+                        [(ngModel)]="newPassword"
+                        placeholder="Set login password (default: prasanna)"
+                      />
+                      <button type="button" class="eye-btn" (click)="newPasswordVisible.set(!newPasswordVisible())">
+                        <app-icon [name]="newPasswordVisible() ? 'eye-off' : 'eye'" [size]="16"></app-icon>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="form-buttons">
+                    <button type="button" class="btn-sec" (click)="toggleAddForm()">Cancel</button>
+                    <button type="submit" class="btn-primary" [disabled]="!staffForm.valid">
+                      <app-icon name="user" [size]="14"></app-icon>
+                      Create Personnel
+                    </button>
+                  </div>
+                </form>
+              }
+            </div>
+          }
+
+          <!-- ── Staff Table ── -->
+          <div class="table-wrap">
+            <table class="staff-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Assigned Role</th>
+                  <th>Phone</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                  <th class="ta-center">Manage</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (person of dataService.personnel(); track person.id) {
+                  <tr>
+                    <td>
+                      <div class="staff-cell">
+                        <span class="avatar-sm">{{ person.name.slice(0, 2).toUpperCase() }}</span>
+                        <div>
+                          <span class="staff-name">{{ person.name }}</span>
+                          <span class="staff-email">{{ person.email }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="role-badge" [class]="person.role.toLowerCase().replace(' ', '-')">
+                        {{ person.role }}
+                      </span>
+                    </td>
+                    <td class="muted-cell">{{ person.phone || '—' }}</td>
+                    <td class="muted-cell">{{ person.joinedDate }}</td>
+                    <td>
+                      <span class="status-indicator" [class.active]="person.status === 'Active'">
+                        {{ person.status }}
+                      </span>
+                    </td>
+                    <td class="ta-center">
+                      <button class="edit-btn" (click)="openEdit(person)" title="Edit personnel">
+                        <app-icon name="edit" [size]="14"></app-icon>
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Edit Personnel Drawer ── -->
+    @if (showEditDrawer()) {
+      <div class="drawer-backdrop" (click)="closeEdit()">
+        <div class="drawer" (click)="$event.stopPropagation()">
+
+          <div class="drawer-header">
+            <div class="drawer-header-left">
+              <span class="drawer-avatar">{{ editTarget()!.name.slice(0,2).toUpperCase() }}</span>
+              <div>
+                <h2 class="drawer-name">{{ editTarget()!.name }}</h2>
+                <p class="drawer-id">{{ editTarget()!.id }} &bull; Joined {{ editTarget()!.joinedDate }}</p>
+              </div>
+            </div>
+            <button class="drawer-close-btn" (click)="closeEdit()">
+              <app-icon name="close" [size]="18"></app-icon>
+            </button>
+          </div>
+
+          <div class="drawer-body">
+
+            @if (editSaved()) {
+              <div class="success-alert mb-16">
+                <app-icon name="check-circle" [size]="18"></app-icon>
+                <span>Changes saved successfully!</span>
+              </div>
+            }
+
+            <!-- Role Assignment -->
+            <div class="drawer-section">
+              <h3 class="drawer-section-title">
+                <app-icon name="user" [size]="15"></app-icon>
+                Role Assignment
+              </h3>
+              <div class="form-group">
+                <label for="edit-role">Assigned Role</label>
+                <div class="select-wrapper">
+                  <select id="edit-role" [(ngModel)]="editRole">
+                    @for (r of roles; track r) {
+                      <option [value]="r">{{ r }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Account Status -->
+            <div class="drawer-section">
+              <h3 class="drawer-section-title">
+                <app-icon name="check-circle" [size]="15"></app-icon>
+                Account Status
+              </h3>
+              <div class="status-toggle-row">
+                <div class="status-toggle-info">
+                  <span class="status-toggle-label">{{ editStatus === 'Active' ? 'Active' : 'Inactive' }}</span>
+                  <span class="status-toggle-desc">
+                    {{ editStatus === 'Active' ? 'Personnel can log in and use the system' : 'Personnel is suspended and cannot log in' }}
+                  </span>
+                </div>
+                <button
+                  class="toggle-switch"
+                  [class.on]="editStatus === 'Active'"
+                  type="button"
+                  (click)="editStatus = editStatus === 'Active' ? 'Inactive' : 'Active'"
+                  [attr.aria-label]="'Toggle status'"
+                >
+                  <span class="toggle-knob"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Password Change -->
+            <div class="drawer-section">
+              <h3 class="drawer-section-title">
+                <app-icon name="lock" [size]="15"></app-icon>
+                Change Password
+              </h3>
+              <div class="form-group">
+                <label for="edit-password">New Password</label>
+                <div class="input-icon-wrap">
+                  <input
+                    id="edit-password"
+                    [type]="editPasswordVisible() ? 'text' : 'password'"
+                    [(ngModel)]="editPassword"
+                    placeholder="Leave blank to keep current password"
+                  />
+                  <button type="button" class="eye-btn" (click)="editPasswordVisible.set(!editPasswordVisible())">
+                    <app-icon [name]="editPasswordVisible() ? 'eye-off' : 'eye'" [size]="16"></app-icon>
+                  </button>
+                </div>
+                <span class="field-hint">Password must be at least 6 characters</span>
+              </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="drawer-section danger-zone">
+              <h3 class="drawer-section-title danger-title">
+                <app-icon name="close" [size]="15"></app-icon>
+                Danger Zone
+              </h3>
+              @if (!showDeleteConfirm()) {
+                <button class="btn-danger-outline" type="button" (click)="confirmDelete()">
+                  Remove Personnel
+                </button>
+              } @else {
+                <div class="delete-confirm-box">
+                  <p>Are you sure you want to permanently remove <strong>{{ editTarget()!.name }}</strong>? This cannot be undone.</p>
+                  <div class="form-buttons">
+                    <button class="btn-sec" type="button" (click)="showDeleteConfirm.set(false)">Cancel</button>
+                    <button class="btn-danger" type="button" (click)="doDelete()">Yes, Remove</button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="drawer-footer">
+            <button class="btn-sec" type="button" (click)="closeEdit()">Cancel</button>
+            <button class="btn-primary" type="button" (click)="saveEdit()">
+              <app-icon name="check-circle" [size]="15"></app-icon>
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+  <!-- ── ALL OTHER ROLES: own profile card only ── -->
+  } @else {
+    <div class="profile-grid profile-grid--single">
+      <div class="panel user-card">
+        <div class="user-banner"></div>
+        <div class="user-avatar-wrap">
+          <span class="user-avatar">
+            {{ myPersonnel()?.name ? myPersonnel()!.name.slice(0,2).toUpperCase() : '??' }}
+          </span>
+        </div>
+        <div class="user-info">
+          <h2>{{ myPersonnel()?.name ?? 'Unknown' }}</h2>
+          <p class="user-role">{{ myPersonnel()?.role ?? '' }}</p>
+          <p class="user-meta">Personnel Account &bull; {{ myPersonnel()?.status ?? 'Active' }}</p>
+        </div>
+
+        <div class="user-stats">
+          @for (stat of stats; track stat.label) {
+            <div class="stat-item">
+              <span class="stat-count">{{ stat.count }}</span>
+              <span class="stat-label">{{ stat.label }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="contact-details">
+          <div class="cd-row">
+            <app-icon name="user" [size]="16"></app-icon>
+            <span>{{ myPersonnel()?.email ?? '' }}</span>
+          </div>
+          @if (myPersonnel()?.phone) {
+            <div class="cd-row">
+              <app-icon name="phone" [size]="16"></app-icon>
+              <span>{{ myPersonnel()!.phone }}</span>
+            </div>
+          }
+          <div class="cd-row">
+            <app-icon name="clock" [size]="16"></app-icon>
+            <span>Joined {{ myPersonnel()?.joinedDate ?? '' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</section>

@@ -1,0 +1,531 @@
+<section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">
+        Receptionist Dashboard
+        @if (authService.selectedPersonnel()) {
+          <span class="viewing-person-chip">
+            &mdash; {{ authService.selectedPersonnel()!.name }}
+          </span>
+        }
+      </h1>
+      <p class="page-sub">Managing frontend bookings, handovers and payments</p>
+    </div>
+    <!-- Create New Order CTA -->
+        <button type="button" class="create-order-btn" (click)="openCreateModal()">
+      <app-icon name="plus" [size]="16"></app-icon>
+      New Order
+    </button>
+  </div>
+
+  @if (authService.role() === 'admin') {
+    <div class="sub-head-nav">
+      <button type="button" class="back-to-admin-btn" (click)="switchView('admin')">
+        <app-icon name="chevron-left" [size]="14"></app-icon> Back to Admin Overview
+      </button>
+
+      @if (authService.selectedPersonnel(); as person) {
+        <div class="viewing-banner">
+          <span class="viewing-avatar">{{ getInitials(person.name) }}</span>
+          <div>
+            <span class="viewing-label">Viewing Dashboard for</span>
+            <span class="viewing-name">{{ person.name }}</span>
+          </div>
+          <span class="viewing-role-badge">{{ person.role }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Success toast -->
+  @if (createSuccess()) {
+    <div class="create-toast">
+      <app-icon name="check-circle" [size]="17"></app-icon>
+      New order created successfully!
+    </div>
+  }
+
+  <!-- Receptionist summary metrics -->
+  <div class="cards mini-cards four-cols">
+    <article class="card">
+      <p class="card-value">{{ receptionistOpen().length }}</p>
+      <p class="card-label">New Orders</p>
+    </article>
+    <article class="card">
+      <p class="card-value">{{ receptionistReassigned().length }}</p>
+      <p class="card-label">Reassigned</p>
+    </article>
+    <article class="card">
+      <p class="card-value">{{ receptionistPayment().length }}</p>
+      <p class="card-label">Wait for Payment</p>
+    </article>
+    <article class="card">
+      <p class="card-value">{{ receptionistDelivery().length }}</p>
+      <p class="card-label">Wait for Delivery</p>
+    </article>
+  </div>
+
+  <div class="dashboard-grid">
+
+    <!-- New Orders Panel -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">New Orders</h2>
+          <p class="panel-sub">New client bookings awaiting processing</p>
+        </div>
+        <span class="count-badge tone-info">{{ receptionistOpen().length }}</span>
+      </div>
+
+      @if (receptionistOpen().length > 0) {
+        <div class="table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Mobile Model</th>
+                <th>Status</th>
+                <th class="ta-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of receptionistOpen(); track order.id) {
+                <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                  <td class="mono">{{ order.id }}</td>
+                  <td>
+                    <div class="customer">
+                      <span class="avatar-sm">{{ order.initials }}</span>
+                      <span>{{ order.customer }}</span>
+                    </div>
+                  </td>
+                  <td>{{ order.model }}</td>
+                  <td>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </td>
+                  <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-list-msg"><p>No open orders.</p></div>
+      }
+    </div>
+
+    <!-- Reassigned Panel -->
+    <div class="panel mt-24">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">Reassigned</h2>
+          <p class="panel-sub">Technical tasks completed, ready for final check</p>
+        </div>
+        <span class="count-badge tone-warning">{{ receptionistReassigned().length }}</span>
+      </div>
+
+      @if (receptionistReassigned().length > 0) {
+        <div class="table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Mobile Model</th>
+                <th>Status</th>
+                <th class="ta-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of receptionistReassigned(); track order.id) {
+                <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                  <td class="mono">{{ order.id }}</td>
+                  <td>
+                    <div class="customer">
+                      <span class="avatar-sm">{{ order.initials }}</span>
+                      <span>{{ order.customer }}</span>
+                    </div>
+                  </td>
+                  <td>{{ order.model }}</td>
+                  <td>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </td>
+                  <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-list-msg"><p>No reassigned orders.</p></div>
+      }
+    </div>
+
+    <!-- Wait for Payment Panel -->
+    <div class="panel mt-24">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">Wait for Payment</h2>
+          <p class="panel-sub">Orders awaiting cashier payment receipt validation</p>
+        </div>
+        <span class="count-badge tone-success">{{ receptionistPayment().length }}</span>
+      </div>
+
+      @if (receptionistPayment().length > 0) {
+        <div class="table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Mobile Model</th>
+                <th>Status</th>
+                <th class="ta-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of receptionistPayment(); track order.id) {
+                <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                  <td class="mono">{{ order.id }}</td>
+                  <td>
+                    <div class="customer">
+                      <span class="avatar-sm">{{ order.initials }}</span>
+                      <span>{{ order.customer }}</span>
+                    </div>
+                  </td>
+                  <td>{{ order.model }}</td>
+                  <td>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </td>
+                  <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-list-msg"><p>No orders waiting for payment.</p></div>
+      }
+    </div>
+
+    <!-- Wait for Delivery Panel -->
+    <div class="panel mt-24">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">Wait for Delivery</h2>
+          <p class="panel-sub">Paid orders awaiting customer pickup / courier dispatch</p>
+        </div>
+        <span class="count-badge tone-success">{{ receptionistDelivery().length }}</span>
+      </div>
+
+      @if (receptionistDelivery().length > 0) {
+        <div class="table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Mobile Model</th>
+                <th>Status</th>
+                <th class="ta-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of receptionistDelivery(); track order.id) {
+                <tr class="clickable-row" (click)="viewOrderDetails(order.id)">
+                  <td class="mono">{{ order.id }}</td>
+                  <td>
+                    <div class="customer">
+                      <span class="avatar-sm">{{ order.initials }}</span>
+                      <span>{{ order.customer }}</span>
+                    </div>
+                  </td>
+                  <td>{{ order.model }}</td>
+                  <td>
+                    <span class="status" [class]="statusClass(order.status)">{{ order.status }}</span>
+                  </td>
+                  <td class="ta-right amount">{{ formatAmount(order.amount) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-list-msg"><p>No orders waiting for delivery.</p></div>
+      }
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     CREATE NEW ORDER MODAL
+══════════════════════════════════════════════════════════ -->
+@if (showCreateModal()) {
+  <div class="co-backdrop" (click)="closeCreateModal()">
+    <div class="co-sheet" (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="co-header">
+        <div class="co-header-left">
+          <div class="co-icon-wrap">
+            <app-icon name="plus" [size]="20"></app-icon>
+          </div>
+          <div>
+            <h2 class="co-title">Create New Order</h2>
+            <p class="co-sub">Register a new device repair job</p>
+          </div>
+        </div>
+        <button type="button" class="co-close-btn" (click)="closeCreateModal()">
+          <app-icon name="close" [size]="18"></app-icon>
+        </button>
+      </div>
+
+      <!-- Scrollable Body -->
+      <div class="co-body">
+
+        <!-- ── Section: Received Info ── -->
+        <div class="co-section">
+          <div class="co-sec-label">
+            <app-icon name="calendar" [size]="14"></app-icon>
+            Received Details
+          </div>
+          <div class="co-grid-2">
+            <div class="co-field">
+              <label class="co-lbl">Date Received *</label>
+              <input type="date" class="co-input" [(ngModel)]="newOrder.receivedDate" />
+            </div>
+            <div class="co-field">
+              <label class="co-lbl">Received At / Branch Address</label>
+              <input type="text" class="co-input" [(ngModel)]="newOrder.receivedAddress"
+                     placeholder="e.g. Main Branch – 12 Oxford St, Accra" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Section: Customer Info ── -->
+        <div class="co-section">
+          <div class="co-sec-label">
+            <app-icon name="user" [size]="14"></app-icon>
+            Customer Information
+          </div>
+          <div class="co-grid-2">
+            <div class="co-field">
+              <label class="co-lbl">Full Name *</label>
+              <input type="text" class="co-input" [(ngModel)]="newOrder.customer" placeholder="e.g. Jane Mensah" />
+            </div>
+            <div class="co-field">
+              <label class="co-lbl">Phone Number *</label>
+              <input type="tel" class="co-input" [(ngModel)]="newOrder.phone" placeholder="+233 24 000 0000" />
+            </div>
+            <div class="co-field co-field-full">
+              <label class="co-lbl">Email Address</label>
+              <input type="email" class="co-input" [(ngModel)]="newOrder.email" placeholder="customer@email.com" />
+            </div>
+          </div>
+        </div>
+<div class="co-section">
+  <div class="co-sec-label">
+    <app-icon name="wrench" [size]="14"></app-icon>
+    Pre-Booking Details
+  </div>
+
+  <div class="co-grid-2">
+
+    <!-- Booking Date -->
+    <div class="co-field">
+      <label class="co-lbl">Booking Date *</label>
+      <input
+        type="date"
+        class="co-input"
+        [(ngModel)]="newOrder.bookingDate" />
+    </div>
+
+    <!-- Booking Slot -->
+    <div class="co-field">
+      <label class="co-lbl">Booking Slot *</label>
+      <select
+        class="co-input"
+        [(ngModel)]="newOrder.bookingSlot">
+        <option value="">Select Booking Slot</option>
+        <option>09:00 AM - 11:00 AM</option>
+        <option>11:00 AM - 01:00 PM</option>
+        <option>02:00 PM - 04:00 PM</option>
+        <option>04:00 PM - 06:00 PM</option>
+        <option>06:00 PM - 08:00 PM</option>
+      </select>
+    </div>
+
+    <!-- Advance Amount -->
+    <div class="co-field">
+      <label class="co-lbl">Advance Amount</label>
+      <input
+        type="number"
+        class="co-input"
+        [(ngModel)]="newOrder.advanceAmount"
+        placeholder="Enter Advance Amount" />
+    </div>
+
+    <!-- Advance Payment Mode -->
+    <div class="co-field">
+      <label class="co-lbl">Advance Payment Mode</label>
+      <select
+        class="co-input"
+        [(ngModel)]="newOrder.advancePaymentMode">
+        <option value="">Select Payment Mode</option>
+        <option>Cash</option>
+        <option>UPI</option>
+        <option>Credit Card</option>
+        <option>Debit Card</option>
+        <option>Net Banking</option>
+      </select>
+    </div>
+
+  </div>
+</div>
+        <!-- ── Section: Device Info ── -->
+        <div class="co-section">
+          <div class="co-sec-label">
+            <app-icon name="phone" [size]="14"></app-icon>
+            Device Details
+          </div>
+          <div class="co-grid-2">
+            <div class="co-field">
+              <label class="co-lbl">Device Brand / Model *</label>
+              <input type="text" class="co-input" [(ngModel)]="newOrder.model" placeholder="e.g. Samsung Galaxy S23" />
+            </div>
+            <div class="co-field">
+              <label class="co-lbl">IMEI / Serial Number</label>
+              <input type="text" class="co-input" [(ngModel)]="newOrder.imei" placeholder="15-digit IMEI" />
+            </div>
+            <div class="co-field co-field-full">
+              <label class="co-lbl">Issue / Fault Description *</label>
+              <textarea class="co-textarea" rows="2" [(ngModel)]="newOrder.issue"
+                        placeholder="Describe the reported issue..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Section: Device Password ── -->
+        <div class="co-section">
+          <div class="co-sec-label">
+            <app-icon name="lock" [size]="14"></app-icon>
+            Device Password / Lock
+          </div>
+
+          <!-- Password type tabs -->
+          <div class="pw-type-tabs">
+            <button type="button" class="pw-tab" [class.active]="newOrder.passwordType === 'none'"
+                    (click)="newOrder.passwordType = 'none'; onPasswordTypeChange()">
+              None
+            </button>
+            <button type="button" class="pw-tab" [class.active]="newOrder.passwordType === 'pin'"
+                    (click)="newOrder.passwordType = 'pin'; onPasswordTypeChange()">
+              PIN / Passcode
+            </button>
+            <button type="button" class="pw-tab" [class.active]="newOrder.passwordType === 'pattern'"
+                    (click)="newOrder.passwordType = 'pattern'; onPasswordTypeChange()">
+              Pattern
+            </button>
+            <button type="button" class="pw-tab" [class.active]="newOrder.passwordType === 'text'"
+                    (click)="newOrder.passwordType = 'text'; onPasswordTypeChange()">
+              Password
+            </button>
+          </div>
+
+          @if (newOrder.passwordType === 'pin') {
+            <div class="co-field" style="margin-top:12px; max-width:240px;">
+              <label class="co-lbl">Enter PIN</label>
+              <input type="tel" class="co-input mono" [(ngModel)]="newOrder.devicePassword"
+                     placeholder="e.g. 1234" maxlength="8" />
+            </div>
+          }
+
+          @if (newOrder.passwordType === 'text') {
+            <div class="co-field" style="margin-top:12px; max-width:320px;">
+              <label class="co-lbl">Enter Password</label>
+              <input type="text" class="co-input" [(ngModel)]="newOrder.devicePassword"
+                     placeholder="Device password" />
+            </div>
+          }
+
+          @if (newOrder.passwordType === 'pattern') {
+            <div class="pattern-panel">
+              <div class="pattern-hint">
+                <app-icon name="lock" [size]="13"></app-icon>
+                Draw the unlock pattern by connecting the dots
+              </div>
+
+              <div class="pattern-canvas-wrap">
+                <canvas #patternCanvas class="pattern-canvas"></canvas>
+              </div>
+
+              @if (patternDisplay()) {
+                <div class="pattern-recorded">
+                  <app-icon name="check-circle" [size]="14"></app-icon>
+                  {{ patternDisplay() }}
+                </div>
+              } @else {
+                <div class="pattern-waiting">Waiting for pattern draw…</div>
+              }
+
+              <button type="button" class="pattern-clear-btn" (click)="clearPattern()">
+                <app-icon name="x" [size]="13"></app-icon>
+                Clear Pattern
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- ── Section: Assignment & Billing ── -->
+        <div class="co-section">
+          <div class="co-sec-label">
+            <app-icon name="wrench" [size]="14"></app-icon>
+            Assignment &amp; Billing
+          </div>
+          <div class="co-grid-2">
+            <div class="co-field">
+              <label class="co-lbl">Assigned Technician</label>
+              <select class="co-select" [(ngModel)]="newOrder.technician">
+                <option value="">— Unassigned —</option>
+                @for (p of personnelList(); track p.id) {
+                  <option [value]="p.name">{{ p.name }} ({{ p.role }})</option>
+                }
+              </select>
+            </div>
+            <div class="co-field">
+              <label class="co-lbl">Initial Status</label>
+              <select class="co-select" [(ngModel)]="newOrder.status">
+                @for (s of statuses; track s) {
+                  <option [value]="s">{{ s }}</option>
+                }
+              </select>
+            </div>
+            <div class="co-field">
+              <label class="co-lbl">Estimated Amount ($)</label>
+              <input type="number" class="co-input" [(ngModel)]="newOrder.amount" min="0" step="0.01" placeholder="0.00" />
+            </div>
+            <div class="co-field co-field-full">
+              <label class="co-lbl">Initial Diagnosis Notes</label>
+              <textarea class="co-textarea" rows="2" [(ngModel)]="newOrder.diagnosisNotes"
+                        placeholder="Technician initial assessment (optional)..."></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /co-body -->
+
+      <!-- Footer Actions -->
+      <div class="co-footer">
+        <button type="button" class="co-btn-cancel" (click)="closeCreateModal()">Cancel</button>
+        <button type="button" class="co-btn-submit"
+                [disabled]="!newOrder.customer.trim() || !newOrder.phone.trim() || !newOrder.model.trim() || !newOrder.issue.trim()"
+                (click)="submitOrder()">
+          <app-icon name="plus" [size]="15"></app-icon>
+          Create Order
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

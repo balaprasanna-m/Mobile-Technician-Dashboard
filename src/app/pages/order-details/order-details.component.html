@@ -1,0 +1,974 @@
+<section class="page">
+
+  <!-- Back navigation -->
+  <div class="back-nav">
+    <a [routerLink]="backUrl" class="back-link">
+      <app-icon name="chevron-left" [size]="16" [strokeWidth]="3"></app-icon>
+      Back to Orders list
+    </a>
+  </div>
+
+  <!-- Save Success Toast -->
+  @if (saveSuccess()) {
+    <div class="save-toast" role="status">
+      <app-icon name="check-circle" [size]="16"></app-icon>
+      Order saved successfully!
+    </div>
+  }
+
+  @if (order()) {
+    @let o = editMode() ? draft()! : order()!;
+
+    <!-- ══ Detail Header ══ -->
+    <div class="detail-header">
+      <div class="dh-left">
+        <span class="avatar-lg">{{ o.initials }}</span>
+        <div>
+          <div class="dh-title-row">
+            <h1 class="dh-id">{{ o.id }}</h1>
+            <span class="status" [class]="statusClass(o.status)">{{ o.status }}</span>
+          </div>
+          <p class="dh-subtitle">{{ o.model }} &bull; Customer: {{ o.customer }}</p>
+        </div>
+      </div>
+
+      <div class="dh-right">
+        <!-- Edit / Save / Cancel buttons -->
+        @if (!editMode()) {
+          <button class="btn-edit" id="btn-edit-order" (click)="startEdit()">
+            <app-icon name="edit" [size]="15"></app-icon>
+            Edit Order
+          </button>
+        } @else {
+          <div class="edit-action-bar">
+            <button class="btn-cancel-edit" (click)="cancelEdit()">
+              <app-icon name="x" [size]="15"></app-icon>
+              Cancel
+            </button>
+            <button class="btn-save" id="btn-save-order" (click)="saveChanges()">
+              <app-icon name="check-circle" [size]="15"></app-icon>
+              Save Changes
+            </button>
+          </div>
+        }
+
+        <!-- Status Selector (view mode) -->
+        @if (!editMode()) {
+          <div class="status-selector">
+            <label for="order-status-select" class="status-label">Update Status:</label>
+            <select id="order-status-select" [value]="o.status" (change)="updateStatus($any($event.target).value)">
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="status-selector">
+            <label class="status-label">Owner</label>
+            <select [(ngModel)]="selectedTechnicianId">
+              @for (person of dataService.personnel(); track person.id) {
+                <option [value]="person.id">{{ person.name }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ══ Grid Layout ══ -->
+    <div class="detail-grid">
+
+      <!-- ─── Left Column ─── -->
+      <div class="grid-left">
+
+        <!-- Repair Information Card -->
+        <div class="panel p-24">
+          <h2 class="section-title">
+            <app-icon name="wrench" class="sec-icon" [size]="18"></app-icon>
+            Repair Information
+          </h2>
+
+          <!-- Issue -->
+          <div class="info-block">
+            <span class="info-label">Customer Reported Issue</span>
+            @if (editMode() && canEditRepairInfo) {
+              <textarea class="edit-field" rows="2" [(ngModel)]="draft()!.issue" placeholder="Describe the customer's reported issue"></textarea>
+            } @else {
+              <p class="issue-text">{{ o.issue }}</p>
+            }
+          </div>
+
+          <!-- Diagnosis Notes -->
+          <div class="info-block" style="margin-top: 24px;">
+            <span class="info-label">Technician Diagnosis &amp; Notes</span>
+            @if (editMode() && canEditRepairInfo) {
+              <textarea class="edit-field" rows="4" [(ngModel)]="draft()!.diagnosisNotes" placeholder="Enter diagnosis and technical notes"></textarea>
+            } @else {
+              <div class="notes-box">
+                <p>{{ o.diagnosisNotes || 'No diagnosis notes provided yet. Technical inspection pending.' }}</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Device & Telemetry Details Card -->
+        <div class="panel p-24" style="margin-top: 24px;">
+          <h2 class="section-title">
+            <app-icon name="package" class="sec-icon" [size]="18"></app-icon>
+            Device &amp; Telemetry Details
+          </h2>
+          <div class="tech-spec-grid">
+
+            <div class="spec-item">
+              <span class="spec-label">Device Brand/Model</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <input class="edit-field-sm" type="text" [(ngModel)]="draft()!.model" placeholder="e.g. Oppo Reno 8" />
+              } @else {
+                <span class="spec-value">{{ o.model }}</span>
+              }
+            </div>
+
+            <div class="spec-item">
+              <span class="spec-label">IMEI / Serial Number</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <input class="edit-field-sm" type="text" [(ngModel)]="draft()!.imei" placeholder="15-digit IMEI" />
+              } @else {
+                <span class="spec-value mono">{{ o.imei }}</span>
+              }
+            </div>
+
+            <div class="spec-item">
+              <span class="spec-label">Date Lodged</span>
+              <span class="spec-value">{{ o.createdDate }}</span>
+            </div>
+
+            <div class="spec-item">
+              <span class="spec-label">Assigned Technician</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <select class="edit-select-sm" [(ngModel)]="draft()!.technician">
+                  @for (person of personnelList(); track person.id) {
+                    <option [value]="person.name">{{ person.name }}</option>
+                  }
+                </select>
+              } @else {
+                <span class="spec-value">{{ o.technician }}</span>
+              }
+            </div>
+
+            <div class="spec-item">
+              <span class="spec-label">Device Password</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <input class="edit-field-sm" type="text" [(ngModel)]="draft()!.devicePassword" placeholder="PIN or pattern hint" />
+              } @else {
+                <span class="spec-value">{{ o.devicePassword || '—' }}</span>
+              }
+            </div>
+
+            <div class="spec-item">
+              <span class="spec-label">Order Status</span>
+              @if (editMode()) {
+                <select class="edit-select-sm" [(ngModel)]="draft()!.status">
+                  @for (s of statuses; track s) {
+                    <option [value]="s">{{ s }}</option>
+                  }
+                </select>
+              } @else {
+                <span class="spec-value">{{ o.status }}</span>
+              }
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ Section A: Spare Parts Assignment ══ -->
+        <div class="panel p-24" style="margin-top: 24px;">
+          <h2 class="section-title">
+            <app-icon name="package" class="sec-icon" [size]="18"></app-icon>
+            Spare Parts Assignment
+          </h2>
+
+          @if (o.spareParts && o.spareParts.length > 0) {
+            <div class="spare-list">
+              @for (part of o.spareParts; track $index) {
+                <div class="spare-card">
+                  <div class="spare-card-left">
+                    <div class="spare-card-icon">
+                      <app-icon name="package" [size]="16"></app-icon>
+                    </div>
+                    <div class="spare-card-info">
+                      <span class="spare-name">{{ part.name }}</span>
+                      <div class="spare-meta">
+                        <span class="spare-meta-pill">
+                          <app-icon name="hash" [size]="11"></app-icon>
+                          Qty: {{ part.qty }}
+                        </span>
+                        <span class="spare-meta-pill">
+                          <app-icon name="dollar-sign" [size]="11"></app-icon>
+                          ${{ part.cost.toFixed(2) }}
+                        </span>
+                        @if (part.assignedDate) {
+                          <span class="spare-meta-pill">
+                            <app-icon name="calendar" [size]="11"></app-icon>
+                            {{ part.assignedDate }}
+                          </span>
+                        }
+                        @if (part.assignedBy) {
+                          <span class="spare-meta-pill">
+                            <app-icon name="user" [size]="11"></app-icon>
+                            {{ part.assignedBy }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <div class="spare-card-right">
+                    @if (editMode() && canEditSpares) {
+                      <select class="spare-status-select" [value]="part.status || 'Ordered'"
+                              (change)="updateSpareStatus($index, $any($event.target).value)">
+                        <option value="Ordered">Ordered</option>
+                        <option value="Received">Received</option>
+                        <option value="Installed">Installed</option>
+                      </select>
+                      <button class="btn-remove-spare" type="button" (click)="removeSpare($index)" title="Remove spare">
+                        <app-icon name="x" [size]="13"></app-icon>
+                      </button>
+                    } @else {
+                      <span [class]="'spare-status-badge ' + spareStatusClass(part.status)">
+                        {{ part.status || 'No Status' }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="spare-empty">
+              <app-icon name="package" [size]="20"></app-icon>
+              <span>No spare parts assigned yet.</span>
+            </div>
+          }
+
+          <!-- Assign New Spare (edit mode + canEditSpares) -->
+          @if (editMode() && canEditSpares) {
+            <div class="spare-picker-trigger">
+              <button type="button" class="esw-btn" (click)="openSparePicker()">
+                <app-icon name="plus" [size]="14"></app-icon>
+                Browse &amp; Assign Spare Part
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- ══ Section B: Prebooking Details ══ -->
+        <div class="panel p-24" style="margin-top: 24px;">
+          <h2 class="section-title">
+            <app-icon name="calendar" class="sec-icon" [size]="18"></app-icon>
+            Prebooking Details
+          </h2>
+          <div class="tech-spec-grid">
+            <div class="spec-item">
+              <span class="spec-label">Booking Date</span>
+              @if (editMode() && canEditPrebooking) {
+                <input class="edit-field-sm" type="date" [(ngModel)]="draft()!.prebookingDate" />
+              } @else {
+                <span class="spec-value">{{ o.prebookingDate || '—' }}</span>
+              }
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Booking Time</span>
+              @if (editMode() && canEditPrebooking) {
+                <input class="edit-field-sm" type="time" [(ngModel)]="draft()!.prebookingTime" />
+              } @else {
+                <span class="spec-value">{{ o.prebookingTime || '—' }}</span>
+              }
+            </div>
+            <div class="spec-item" style="grid-column: 1 / -1;">
+              <span class="spec-label">Booking Notes</span>
+              @if (editMode() && canEditPrebooking) {
+                <textarea class="edit-field" rows="2" [(ngModel)]="draft()!.prebookingNotes" placeholder="Optional prebooking notes..."></textarea>
+              } @else {
+                @if (o.prebookingNotes) {
+                  <div class="notes-box"><p>{{ o.prebookingNotes }}</p></div>
+                } @else {
+                  <span class="spec-value text-muted">No prebooking notes.</span>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ Section C: Technician Work Details ══ -->
+        <div class="panel p-24" style="margin-top: 24px;">
+          <h2 class="section-title">
+            <app-icon name="wrench" class="sec-icon" [size]="18"></app-icon>
+            Technician Work Details
+          </h2>
+
+          <div class="tech-spec-grid" style="margin-bottom: 24px;">
+            <div class="spec-item">
+              <span class="spec-label">Work Start Date</span>
+              @if (editMode() && canEditWorkDetails) {
+                <input class="edit-field-sm" type="date" [(ngModel)]="draft()!.workStartDate" />
+              } @else {
+                <span class="spec-value">{{ o.workStartDate || '—' }}</span>
+              }
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Work End Date</span>
+              @if (editMode() && canEditWorkDetails) {
+                <input class="edit-field-sm" type="date" [(ngModel)]="draft()!.workEndDate" />
+              } @else {
+                <span class="spec-value">{{ o.workEndDate || '—' }}</span>
+              }
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Days Worked</span>
+              @if (editMode() && canEditWorkDetails) {
+                <input class="edit-field-sm" type="number" [(ngModel)]="draft()!.workDays" min="0" placeholder="Auto from log" />
+              } @else {
+                <span class="spec-value">{{ o.workDays ?? (o.workLog?.length ?? 0) }} day(s)</span>
+              }
+            </div>
+          </div>
+
+          <!-- Daily Work Log -->
+          <div class="work-log-section">
+            <div class="work-log-header">
+              <span class="work-log-title">
+                <app-icon name="list" [size]="14"></app-icon>
+                Daily Work Log
+              </span>
+              <span class="work-log-count">{{ (o.workLog || []).length }} entr{{ (o.workLog?.length ?? 0) === 1 ? 'y' : 'ies' }}</span>
+            </div>
+
+            @if (o.workLog && o.workLog.length > 0) {
+              <div class="work-log-list">
+                @for (entry of o.workLog; track $index) {
+                  <div class="work-log-card">
+                    <div class="wlc-date">
+                      <app-icon name="calendar" [size]="12"></app-icon>
+                      {{ entry.date }}
+                    </div>
+                    <div class="wlc-note">{{ entry.note }}</div>
+                    <div class="wlc-tech">
+                      <app-icon name="user" [size]="11"></app-icon>
+                      {{ entry.technicianName }}
+                      @if (editMode() && canEditWorkDetails) {
+                        <button class="wlc-remove" type="button" (click)="removeWorkLogEntry($index)" title="Remove entry">
+                          <app-icon name="x" [size]="11"></app-icon>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="spare-empty">
+                <app-icon name="list" [size]="18"></app-icon>
+                <span>No work log entries yet.</span>
+              </div>
+            }
+
+            <!-- Add log entry (edit + canEditWorkDetails) -->
+            @if (editMode() && canEditWorkDetails) {
+              <div class="work-log-add">
+                <div class="work-log-add-row">
+                  <div class="saf-field">
+                    <label class="saf-label">Date *</label>
+                    <input type="date" class="esw-input" [(ngModel)]="newLogDate" />
+                  </div>
+                  <div class="saf-field saf-field-wide">
+                    <label class="saf-label">Work Note *</label>
+                    <input type="text" class="esw-input" [(ngModel)]="newLogNote" placeholder="Describe today's work..." />
+                  </div>
+                  <div class="saf-field" style="align-self: flex-end;">
+                    <button type="button" class="esw-btn" (click)="addWorkLogEntry()"
+                            [disabled]="!newLogDate || !newLogNote.trim()">
+                      <app-icon name="plus" [size]="14"></app-icon>
+                      Add Entry
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ─── Right Column ─── -->
+      <div class="grid-right">
+
+        <!-- Customer Profile Card -->
+        <div class="panel p-24">
+          <h2 class="section-title">
+            <app-icon name="profile" class="sec-icon" [size]="18"></app-icon>
+            Customer Profile
+          </h2>
+          <div class="customer-contact-list">
+
+            <div class="contact-item">
+              <span class="contact-label">Name</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <input class="edit-field-sm" type="text" [(ngModel)]="draft()!.customer" placeholder="Full name" />
+              } @else {
+                <span class="contact-val">{{ o.customer }}</span>
+              }
+            </div>
+
+            <div class="contact-item">
+              <span class="contact-label">Phone Number</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <input class="edit-field-sm" type="tel" [(ngModel)]="draft()!.phone" placeholder="+1 (555) 000-0000" />
+              } @else {
+                <span class="contact-val">{{ o.phone }}</span>
+              }
+            </div>
+
+            <div class="contact-item">
+              <span class="contact-label">Email Address</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <input class="edit-field-sm" type="email" [(ngModel)]="draft()!.email" placeholder="customer@email.com" />
+              } @else {
+                <span class="contact-val">{{ o.email }}</span>
+              }
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Cost Breakdown / Invoice Card -->
+        <div class="panel invoice-panel p-24" style="margin-top: 24px;">
+          <h2 class="section-title">
+            <app-icon name="payments" class="sec-icon" [size]="18"></app-icon>
+            Cost Breakdown / Invoice
+            @if (editMode() && !canEditInvoice) {
+              <span class="role-lock-badge">
+                <app-icon name="lock" [size]="11"></app-icon>
+                Admin only
+              </span>
+            }
+            @if (editMode() && canEditInvoice) {
+              <span class="ib-active-badge">
+                <app-icon name="edit" [size]="11"></app-icon>
+                Invoice Builder Active
+              </span>
+            }
+          </h2>
+
+          <!-- ════ ADMIN INVOICE BUILDER (edit mode + admin) ════ -->
+          @if (editMode() && canEditInvoice) {
+            <div class="invoice-builder">
+
+              <!-- Top bar: title + live grand total -->
+              <div class="ib-topbar">
+                <div class="ib-topbar-left">
+                  <app-icon name="edit" [size]="15"></app-icon>
+                  Manually Build Invoice
+                </div>
+                <div class="ib-live-chip">
+                  <span class="ib-lc-label">Live Grand Total</span>
+                  <span class="ib-lc-val">{{ formatAmount(getDraftInvoiceSubtotal() * 1.1) }}</span>
+                </div>
+              </div>
+
+              <!-- ── Section 1: Spare Parts ── -->
+              <div class="ib-section">
+                <div class="ib-sec-head">
+                  <app-icon name="package" [size]="13"></app-icon>
+                  Spare Parts — Check to Include in Invoice
+                </div>
+
+                @if ((draft()!.spareParts || []).length === 0) {
+                  <div class="ib-empty-note">
+                    <app-icon name="package" [size]="16"></app-icon>
+                    No spare parts assigned to this order yet.
+                  </div>
+                } @else {
+                  <div class="ib-spare-list">
+                    @for (part of draft()!.spareParts; track $index) {
+                      <label class="ib-spare-row" [class.ib-excluded]="!isSpareIncluded(part.name)">
+                        <input type="checkbox" class="ib-chk"
+                               [checked]="isSpareIncluded(part.name)"
+                               (change)="toggleSpareInclusion(part.name)" />
+                        <div class="ib-sp-info">
+                          <span class="ib-sp-name">{{ part.name }}</span>
+                          <span class="ib-sp-meta">
+                            {{ part.qty }} unit{{ part.qty !== 1 ? 's' : '' }}
+                            &times; {{ formatAmount(part.cost) }}
+                            @if (part.status) {
+                              <span [class]="'ib-sp-badge spare-status-badge ' + spareStatusClass(part.status)">
+                                {{ part.status }}
+                              </span>
+                            }
+                          </span>
+                        </div>
+                        <span class="ib-sp-total" [class.ib-crossed]="!isSpareIncluded(part.name)">
+                          {{ formatAmount(part.cost * part.qty) }}
+                        </span>
+                      </label>
+                    }
+                  </div>
+                }
+
+                <!-- Spare sub-total hint -->
+                <div class="ib-spare-subtotal">
+                  <span>Included Spares Subtotal</span>
+                  <span>{{ formatAmount(getDraftIncludedSparesCost()) }}</span>
+                </div>
+              </div>
+
+              <!-- ── Section 2: Labour ── -->
+              <div class="ib-section">
+                <div class="ib-sec-head">
+                  <app-icon name="wrench" [size]="13"></app-icon>
+                  Labour &amp; Diagnostic Charges
+                </div>
+                <div class="ib-labor-row">
+                  <div class="ib-worklog-ref">
+                    <app-icon name="list" [size]="13"></app-icon>
+                    <span>
+                      <strong>{{ (draft()!.workLog || []).length }}</strong>
+                      work log entr{{ (draft()!.workLog?.length ?? 0) === 1 ? 'y' : 'ies' }} on record
+                      &nbsp;&middot;&nbsp;
+                      <strong>{{ draft()!.workDays ?? (draft()!.workLog?.length ?? 0) }}</strong> day(s)
+                    </span>
+                  </div>
+                  <div class="ib-cost-field">
+                    <span class="ib-curr">$</span>
+                    <input type="number" class="ib-cost-inp"
+                           [ngModel]="draft()!.invoiceLaborCost ?? 0"
+                           (ngModelChange)="onLaborCostChange($event)"
+                           min="0" step="0.01" placeholder="0.00" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- ── Section 3: Additional Charges ── -->
+              <div class="ib-section">
+                <div class="ib-sec-head">
+                  <app-icon name="plus" [size]="13"></app-icon>
+                  Additional Charges
+                  @if ((draft()!.invoiceExtraCharges || []).length > 0) {
+                    <span class="ib-sec-badge">{{ (draft()!.invoiceExtraCharges || []).length }}</span>
+                  }
+                </div>
+
+                <!-- Existing extra charges -->
+                @for (charge of (draft()!.invoiceExtraCharges || []); track $index) {
+                  <div class="ib-extra-item">
+                    <div class="ib-extra-label-wrap">
+                      <app-icon name="hash" [size]="12"></app-icon>
+                      {{ charge.label }}
+                    </div>
+                    <span class="ib-extra-amount">{{ formatAmount(charge.amount) }}</span>
+                    <button class="ib-remove-btn" type="button"
+                            (click)="removeExtraCharge($index)" title="Remove charge">
+                      <app-icon name="x" [size]="12"></app-icon>
+                    </button>
+                  </div>
+                }
+
+                @if ((draft()!.invoiceExtraCharges || []).length === 0) {
+                  <div class="ib-extras-empty">No additional charges added yet.</div>
+                }
+
+                <!-- Add new charge row -->
+                <div class="ib-add-extra-row">
+                  <select class="ib-charge-sel" [(ngModel)]="newExtraLabel">
+                    <option value="">— Select charge type —</option>
+                    <option value="Delivery Charges">Delivery Charges</option>
+                    <option value="Inspection Fee">Inspection Fee</option>
+                    <option value="Packaging Fee">Packaging Fee</option>
+                    <option value="Express Service Fee">Express Service Fee</option>
+                    <option value="Home Visit Fee">Home Visit Fee</option>
+                    <option value="Other Charges">Other Charges</option>
+                  </select>
+                  <div class="ib-cost-field">
+                    <span class="ib-curr">$</span>
+                    <input type="number" class="ib-cost-inp"
+                           [(ngModel)]="newExtraAmount"
+                           min="0" step="0.01" placeholder="0.00" />
+                  </div>
+                  <button class="ib-add-extra-btn" type="button"
+                          (click)="addExtraCharge()"
+                          [disabled]="!newExtraLabel || !newExtraAmount">
+                    <app-icon name="plus" [size]="13"></app-icon>
+                    Add Charge
+                  </button>
+                </div>
+              </div>
+
+              <!-- ── Live Totals ── -->
+              <div class="ib-totals-panel">
+                <div class="ib-tot-row">
+                  <span>Subtotal (excl. VAT)</span>
+                  <span>{{ formatAmount(getDraftInvoiceSubtotal()) }}</span>
+                </div>
+                <div class="ib-tot-row ib-tot-tax">
+                  <span>VAT / Service Tax (10%)</span>
+                  <span>{{ formatAmount(getDraftInvoiceSubtotal() * 0.1) }}</span>
+                </div>
+                <div class="ib-tot-row ib-tot-grand">
+                  <span>Total Invoice Value</span>
+                  <span class="ib-grand-val">{{ formatAmount(getDraftInvoiceSubtotal() * 1.1) }}</span>
+                </div>
+              </div>
+
+            </div>
+
+          } @else {
+            <!-- ════ READ-ONLY / NON-ADMIN EDIT — Enhanced Invoice Table ════ -->
+            <table class="invoice-table">
+              <thead>
+                <tr>
+                  <th>Item Description</th>
+                  <th class="ta-right">Qty</th>
+                  <th class="ta-right">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Included Spare Parts only -->
+                @for (part of getIncludedSpares(o); track $index) {
+                  <tr>
+                    <td><span class="part-ref">Spare: {{ part.name }}</span></td>
+                    <td class="ta-right">{{ part.qty }}</td>
+                    <td class="ta-right">{{ formatAmount(part.cost) }}</td>
+                  </tr>
+                }
+
+                <!-- Excluded spares footnote -->
+                @if ((o.invoiceSpareExclusions || []).length > 0) {
+                  <tr class="invoice-excl-row">
+                    <td colspan="3">
+                      <app-icon name="info" [size]="11"></app-icon>
+                      {{ o.invoiceSpareExclusions!.length }} spare(s) excluded from invoice by admin
+                    </td>
+                  </tr>
+                }
+
+                <!-- Labour -->
+                <tr>
+                  <td>
+                    Labour &amp; Diagnostic Charges
+                    @if ((o.workLog || []).length > 0) {
+                      <span class="invoice-log-pill">
+                        <app-icon name="list" [size]="10"></app-icon>
+                        {{ (o.workLog || []).length }} work log entries
+                      </span>
+                    }
+                  </td>
+                  <td class="ta-right">1</td>
+                  <td class="ta-right">{{ formatAmount(getInvoiceLaborCost(o)) }}</td>
+                </tr>
+
+                <!-- Extra / Additional Charges -->
+                @for (charge of getInvoiceExtras(o); track $index) {
+                  <tr class="invoice-extra-row">
+                    <td>
+                      <span class="part-ref extra-ref">
+                        <app-icon name="plus" [size]="11"></app-icon>
+                        {{ charge.label }}
+                      </span>
+                    </td>
+                    <td class="ta-right">1</td>
+                    <td class="ta-right">{{ formatAmount(charge.amount) }}</td>
+                  </tr>
+                }
+
+                <!-- Divider -->
+                <tr class="invoice-divider"><td colspan="3"></td></tr>
+
+                <!-- Totals -->
+                <tr class="calc-row">
+                  <td colspan="2">Subtotal</td>
+                  <td class="ta-right amount">{{ formatAmount(getInvoiceSubtotal(o)) }}</td>
+                </tr>
+                <tr class="calc-row tax-row">
+                  <td colspan="2">VAT / Service Tax (10%)</td>
+                  <td class="ta-right amount">{{ formatAmount(getInvoiceSubtotal(o) * 0.1) }}</td>
+                </tr>
+                <tr class="calc-row grand-total-row">
+                  <td colspan="2">Total Invoice Value</td>
+                  <td class="ta-right amount primary-color">{{ formatAmount(getInvoiceSubtotal(o) * 1.1) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          }
+        </div>
+
+
+        <!-- ══ Section D: Advance Payment Details ══ -->
+        <div class="panel p-24" style="margin-top: 24px;">
+          <h2 class="section-title">
+            <app-icon name="payments" class="sec-icon" [size]="18"></app-icon>
+            Advance Payment
+            @if (!canEditPayment && editMode()) {
+              <span class="role-lock-badge">
+                <app-icon name="lock" [size]="11"></app-icon>
+                Admin / Officer only
+              </span>
+            }
+          </h2>
+
+          <div class="customer-contact-list">
+            <div class="contact-item">
+              <span class="contact-label">Advance Amount Paid</span>
+              @if (editMode() && canEditPayment) {
+                <input class="edit-field-sm" type="number" [(ngModel)]="draft()!.advanceAmount" min="0" step="0.01" placeholder="0.00" />
+              } @else {
+                <span class="contact-val">{{ o.advanceAmount ? formatAmount(o.advanceAmount) : '—' }}</span>
+              }
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Paid Date</span>
+              @if (editMode() && canEditPayment) {
+                <input class="edit-field-sm" type="date" [(ngModel)]="draft()!.advancePaidDate" />
+              } @else {
+                <span class="contact-val">{{ o.advancePaidDate || '—' }}</span>
+              }
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Paid By</span>
+              @if (editMode() && canEditPayment) {
+                <input class="edit-field-sm" type="text" [(ngModel)]="draft()!.advancePaidBy" placeholder="Customer / reference" />
+              } @else {
+                <span class="contact-val">{{ o.advancePaidBy || '—' }}</span>
+              }
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Balance Due</span>
+              <span class="contact-val balance-due">{{ formatAmount(getBalanceDue(o)) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ Section E: Payment & Delivery ══ -->
+        <div class="panel p-24" style="margin-top: 24px;">
+          <h2 class="section-title">
+            <app-icon name="payments" class="sec-icon" [size]="18"></app-icon>
+            Payment &amp; Delivery
+            @if (!canEditPayment && editMode()) {
+              <span class="role-lock-badge">
+                <app-icon name="lock" [size]="11"></app-icon>
+                Admin / Officer only
+              </span>
+            }
+          </h2>
+
+          <!-- Online Delivery Banner -->
+          <div class="delivery-info-banner">
+            <div class="dib-icon">
+              <app-icon name="package" [size]="18"></app-icon>
+            </div>
+            <div class="dib-body">
+              <span class="dib-title">Online Delivery Order</span>
+              <span class="dib-sub">Fill in all delivery details below to schedule and track this shipment.</span>
+            </div>
+            @if (o.deliveryId) {
+              <span class="dib-tracking-id">
+                <app-icon name="hash" [size]="12"></app-icon>
+                {{ o.deliveryId }}
+              </span>
+            }
+          </div>
+
+          <!-- Payment fields -->
+          <div class="pd-section-label">Payment Details</div>
+          <div class="customer-contact-list">
+            <div class="contact-item">
+              <span class="contact-label">Payment Method</span>
+              @if (editMode() && canEditPayment) {
+                <select class="edit-select-sm" [(ngModel)]="draft()!.paymentMethod">
+                  <option value="">— Select —</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="Mobile Money">Mobile Money</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Insurance">Insurance</option>
+                </select>
+              } @else {
+                <span class="contact-val">{{ o.paymentMethod || '—' }}</span>
+              }
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Payment Status</span>
+              @if (editMode() && canEditPayment) {
+                <select class="edit-select-sm" [(ngModel)]="draft()!.paymentStatus">
+                  <option value="">— Select —</option>
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Partial">Partial</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Refunded">Refunded</option>
+                </select>
+              } @else {
+                <span class="contact-val">{{ o.paymentStatus || '—' }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- Delivery fields -->
+          <div class="pd-section-label" style="margin-top: 20px;">Delivery Details</div>
+          <div class="customer-contact-list">
+            <div class="contact-item">
+              <span class="contact-label">Delivery ID / Tracking No.</span>
+              @if (editMode() && canEditDelivery) {
+                <input class="edit-field-sm" type="text" [(ngModel)]="draft()!.deliveryId"
+                       placeholder="e.g. DHL-9284730 or TF-DEL-001" />
+              } @else {
+                <span class="contact-val mono">{{ o.deliveryId || '—' }}</span>
+              }
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Date to Deliver</span>
+              @if (editMode() && canEditDelivery) {
+                <input class="edit-field-sm" type="date" [(ngModel)]="draft()!.deliveryDate" />
+              } @else {
+                @if (o.deliveryDate) {
+                  <span class="contact-val delivery-date-val">
+                    <app-icon name="calendar" [size]="13"></app-icon>
+                    {{ o.deliveryDate }}
+                  </span>
+                } @else {
+                  <span class="contact-val">—</span>
+                }
+              }
+            </div>
+            <div class="contact-item" style="grid-column: 1 / -1;">
+              <span class="contact-label">Delivery Address</span>
+              @if (editMode() && canEditDelivery) {
+                <textarea class="edit-field" rows="2" [(ngModel)]="draft()!.deliveryAddress"
+                          placeholder="e.g. 12 Oxford Street, Accra, Ghana"></textarea>
+              } @else {
+                <span class="contact-val">{{ o.deliveryAddress || '—' }}</span>
+              }
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  } @else {
+    <div class="empty-detail">
+      <span class="empty-icon"><app-icon name="package" [size]="36"></app-icon></span>
+      <h2>Order Not Found</h2>
+      <p>The repair order you are requesting does not exist, or has been removed from the technician catalog.</p>
+      <a [routerLink]="backUrl" class="btn-clear text-center" style="display:inline-block; margin-top: 16px;">
+        Back to Dashboard
+      </a>
+    </div>
+  }
+
+</section>
+
+<!-- ══ Spare Parts Picker Modal ══ -->
+@if (showSparePicker()) {
+  <div class="picker-backdrop" (click)="closeSparePicker()"></div>
+  <div class="picker-modal">
+
+    <div class="picker-header">
+      <div class="picker-title">
+        <app-icon name="package" [size]="18"></app-icon>
+        Select Spare Part
+      </div>
+      <button class="picker-close" type="button" (click)="closeSparePicker()">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+    </div>
+
+    <!-- Search + Filter Bar -->
+    <div class="picker-toolbar">
+      <div class="picker-search-wrap">
+        <app-icon name="search" [size]="15" class="picker-search-icon"></app-icon>
+        <input
+          type="text"
+          class="picker-search-input"
+          placeholder="Search by name, SKU or model..."
+          [value]="sparePickerSearch()"
+          (input)="sparePickerSearch.set($any($event.target).value)"
+          autofocus
+        />
+      </div>
+      <div class="picker-filters">
+        <button class="pf-btn" [class.active]="sparePickerFilter() === 'all'"    (click)="sparePickerFilter.set('all')">All</button>
+        <button class="pf-btn" [class.active]="sparePickerFilter() === 'In Stock'" (click)="sparePickerFilter.set('In Stock')">In Stock</button>
+        <button class="pf-btn" [class.active]="sparePickerFilter() === 'Low Stock'" (click)="sparePickerFilter.set('Low Stock')">Low Stock</button>
+      </div>
+    </div>
+
+    <!-- Spare Inventory List -->
+    <div class="picker-list">
+      @if (filteredPickerSpares().length === 0) {
+        <div class="picker-empty">
+          <app-icon name="package" [size]="24"></app-icon>
+          <span>No spare parts match your search.</span>
+        </div>
+      } @else {
+        @for (spare of filteredPickerSpares(); track spare.id) {
+          <div
+            class="picker-item"
+            [class.selected]="selectedPickerSpare()?.id === spare.id"
+            [class.out-of-stock]="spare.status === 'Out of Stock'"
+            (click)="spare.status !== 'Out of Stock' && selectedPickerSpare.set(spare)"
+          >
+            <div class="pi-icon">
+              <app-icon name="package" [size]="16"></app-icon>
+            </div>
+            <div class="pi-info">
+              <span class="pi-name">{{ spare.name }}</span>
+              <div class="pi-meta">
+                <span class="pi-sku">{{ spare.sku }}</span>
+                <span class="pi-compat">{{ spare.modelCompatibility }}</span>
+              </div>
+            </div>
+            <div class="pi-right">
+              <span class="pi-price">${{ spare.price.toFixed(2) }}</span>
+              <span class="pi-stock-badge"
+                [class.badge-in]="spare.status === 'In Stock'"
+                [class.badge-low]="spare.status === 'Low Stock'"
+                [class.badge-out]="spare.status === 'Out of Stock'"
+              >{{ spare.status }}</span>
+              @if (selectedPickerSpare()?.id === spare.id) {
+                <app-icon name="check-circle" [size]="16" class="pi-check"></app-icon>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Selected Spare Qty + Assign Footer -->
+    @if (selectedPickerSpare()) {
+      <div class="picker-footer">
+        <div class="picker-selected-info">
+          <app-icon name="package" [size]="14"></app-icon>
+          <span>{{ selectedPickerSpare()!.name }}</span>
+          <span class="psi-price">${{ selectedPickerSpare()!.price.toFixed(2) }} / unit</span>
+        </div>
+        <div class="picker-footer-row">
+          <div class="picker-qty-wrap">
+            <label class="saf-label">Quantity</label>
+            <div class="qty-control">
+              <button type="button" class="qty-btn" (click)="sparePickerQty.set(Math.max(1, sparePickerQty() - 1))">−</button>
+              <input type="number" class="qty-input"
+                [value]="sparePickerQty()"
+                (input)="sparePickerQty.set(Math.max(1, +$any($event.target).value))"
+                min="1" />
+              <button type="button" class="qty-btn" (click)="sparePickerQty.set(sparePickerQty() + 1)">+</button>
+            </div>
+          </div>
+          <div class="picker-total">
+            <span class="pt-label">Total</span>
+            <span class="pt-value">${{ (selectedPickerSpare()!.price * sparePickerQty()).toFixed(2) }}</span>
+          </div>
+          <button type="button" class="esw-btn picker-assign-btn" (click)="confirmPickerAssign()">
+            <app-icon name="check-circle" [size]="15"></app-icon>
+            Assign to Order
+          </button>
+        </div>
+      </div>
+    }
+
+  </div>
+}

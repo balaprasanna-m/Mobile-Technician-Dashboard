@@ -1,0 +1,326 @@
+
+
+@if (showAuthModal()) {
+  <div class="modal-backdrop">
+    <div class="security-modal">
+
+      <div class="modal-icon">
+        <app-icon name="lock" [size]="36"></app-icon>
+      </div>
+
+      <h2>Secure Access Required</h2>
+      <p>
+        Verify your identity to access financial information.
+      </p>
+
+      <div class="form-group">
+        <label>User Name</label>
+        <input
+          type="text"
+          [(ngModel)]="username"
+          placeholder="Enter username">
+      </div>
+
+      <div class="form-group">
+        <label>Secret PIN</label>
+        <input
+          type="password"
+          [(ngModel)]="secretPin"
+          placeholder="Enter secret PIN">
+      </div>
+
+      <div class="form-group">
+        <label>OTP</label>
+        <input
+          type="text"
+          maxlength="6"
+          [(ngModel)]="otp"
+          placeholder="Enter OTP">
+      </div>
+
+     <div class="modal-actions">
+  <button class="btn-sec" (click)="cancelAccess()">
+    Cancel
+  </button>
+
+  <button class="btn-create" (click)="verifyAccess()">
+    Verify & Continue
+  </button>
+</div>
+
+    </div>
+  </div>
+}
+<div [class.page-disabled]="showAuthModal()"><section class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Payments & Ledger</h1>
+      <p class="page-sub">Monitor workshop finances, logs, and margins</p>
+    </div>
+    <div class="head-actions">
+      <span class="net-income-badge" [class.negative]="dataService.overallIncome() < 0">
+        Net Income: {{ formatAmount(dataService.overallIncome()) }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Subtabs Navigation -->
+  <div class="subtabs-bar">
+    <button 
+      class="subtab-btn" 
+      [class.active]="activeTab() === 'expense'"
+      (click)="setTab('expense')"
+    >
+      <app-icon name="arrow-down" [size]="16" class="tab-icon-red"></app-icon>
+      Expenses
+    </button>
+    <button 
+      class="subtab-btn" 
+      [class.active]="activeTab() === 'revenue'"
+      (click)="setTab('revenue')"
+    >
+      <app-icon name="arrow-up" [size]="16" class="tab-icon-green"></app-icon>
+      Revenue
+    </button>
+    <button 
+      class="subtab-btn" 
+      [class.active]="activeTab() === 'income'"
+      (click)="setTab('income')"
+    >
+      <app-icon name="payments" [size]="16"></app-icon>
+      Overall Income
+    </button>
+  </div>
+
+  <!-- Content panels -->
+  <div class="subtab-content">
+    
+    <!-- EXPENSES TAB PANEL -->
+    @if (activeTab() === 'expense') {
+      <div class="panel">
+        <div class="panel-head-fl">
+          <div>
+            <h2 class="panel-title">Operating Expenses</h2>
+            <p class="panel-sub">Total Spent: <strong class="danger-text">{{ formatAmount(dataService.totalExpenses()) }}</strong></p>
+          </div>
+          <button (click)="toggleExpenseForm()" class="btn-create danger-btn">
+            <app-icon name="arrow-down" [size]="16"></app-icon>
+            {{ showExpenseForm() ? 'Cancel' : 'Add Expense' }}
+          </button>
+        </div>
+
+        <!-- Add Expense Form -->
+        @if (showExpenseForm()) {
+          <div class="expense-form-card">
+            <h3>Record New Workshop Expense</h3>
+            
+            @if (formSubmitted()) {
+              <div class="success-alert">
+                <app-icon name="check-circle" [size]="18"></app-icon>
+                <span>Expense added successfully!</span>
+              </div>
+            } @else {
+              <form (ngSubmit)="onSubmitExpense()" #expenseForm="ngForm">
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label for="exp-cat">Category</label>
+                    <div class="select-wrapper">
+                      <select id="exp-cat" name="category" [(ngModel)]="category">
+                        @for (cat of categories; track cat) {
+                          <option [value]="cat">{{ cat }}</option>
+                        }
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group flex-1">
+                    <label for="exp-amount">Amount ($)</label>
+                    <input
+                      id="exp-amount"
+                      type="number"
+                      name="amount"
+                      [(ngModel)]="amount"
+                      placeholder="e.g. 50"
+                      min="1"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label for="exp-date">Date incurred</label>
+                    <input
+                      id="exp-date"
+                      type="date"
+                      name="dateStr"
+                      [(ngModel)]="dateStr"
+                      required
+                    />
+                  </div>
+                  <div class="form-group flex-2">
+                    <label for="exp-desc">Description</label>
+                    <input
+                      id="exp-desc"
+                      type="text"
+                      name="description"
+                      [(ngModel)]="description"
+                      placeholder="e.g. Purchased 5x battery adhesive strips"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-buttons">
+                  <button type="button" class="btn-sec" (click)="toggleExpenseForm()">Cancel</button>
+                  <button type="submit" class="btn-primary danger-btn" [disabled]="!expenseForm.valid || amount <= 0">
+                    Record Expense
+                  </button>
+                </div>
+              </form>
+            }
+          </div>
+        }
+
+        <!-- Expenses Table -->
+        <div class="table-wrap">
+          <table class="ledger-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Date</th>
+                <th class="ta-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (exp of dataService.expenses(); track exp.id) {
+                <tr>
+                  <td class="mono-id">{{ exp.id }}</td>
+                  <td>
+                    <span class="category-chip">{{ exp.category }}</span>
+                  </td>
+                  <td class="desc-cell">{{ exp.description }}</td>
+                  <td>{{ exp.date }}</td>
+                  <td class="ta-right amount red-amount">{{ formatAmount(exp.amount) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- REVENUE TAB PANEL -->
+    @if (activeTab() === 'revenue') {
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">Earned Revenue Streams</h2>
+            <p class="panel-sub">Total Collected: <strong class="success-text">{{ formatAmount(dataService.totalRevenue()) }}</strong></p>
+          </div>
+        </div>
+
+        <!-- Revenue Table -->
+        <div class="table-wrap">
+          <table class="ledger-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Source Item</th>
+                <th>Associated Order</th>
+                <th>Date</th>
+                <th class="ta-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (rev of dataService.revenues(); track rev.id) {
+                <tr>
+                  <td class="mono-id">{{ rev.id }}</td>
+                  <td class="desc-cell">{{ rev.source }}</td>
+                  <td>
+                    @if (rev.referenceId) {
+                      <a [routerLink]="['/app/orders', rev.referenceId]" class="ref-link">
+                        {{ rev.referenceId }}
+                      </a>
+                    } @else {
+                      <span class="dash-span">-</span>
+                    }
+                  </td>
+                  <td>{{ rev.date }}</td>
+                  <td class="ta-right amount green-amount">{{ formatAmount(rev.amount) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- OVERALL INCOME PANEL -->
+    @if (activeTab() === 'income') {
+      <div class="income-view">
+        
+        <!-- Quick Stats Cards Row -->
+        <div class="income-cards-grid">
+          
+          <div class="income-card green-card">
+            <span class="inc-icon"><app-icon name="arrow-up" [size]="24"></app-icon></span>
+            <div class="inc-details">
+              <span class="inc-hdr">Total Revenue</span>
+              <p class="inc-val">{{ formatAmount(dataService.totalRevenue()) }}</p>
+              <span class="inc-sub text-green">Sales and repairs completed</span>
+            </div>
+          </div>
+
+          <div class="income-card red-card">
+            <span class="inc-icon"><app-icon name="arrow-down" [size]="24"></app-icon></span>
+            <div class="inc-details">
+              <span class="inc-hdr">Total Expenses</span>
+              <p class="inc-val">{{ formatAmount(dataService.totalExpenses()) }}</p>
+              <span class="inc-sub text-red">Parts, stock and operations</span>
+            </div>
+          </div>
+
+          <div class="income-card blue-card" [class.negative-card]="dataService.overallIncome() < 0">
+            <span class="inc-icon"><app-icon name="payments" [size]="24"></app-icon></span>
+            <div class="inc-details">
+              <span class="inc-hdr">Net Operating Profit</span>
+              <p class="inc-val">{{ formatAmount(dataService.overallIncome()) }}</p>
+              <span class="inc-sub text-blue">Takehome margins</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Margin graphical summary card -->
+        <div class="panel margin-summary-card p-24">
+          <h2 class="section-title">Ledger Summary Details</h2>
+          
+          <div class="ratio-bar-wrap">
+            <div class="ratio-labels">
+              <span>Expenses ({{ (dataService.totalExpenses() / (dataService.totalRevenue() || 1) * 100) | number:'1.0-1' }}%)</span>
+              <span>Revenue (100%)</span>
+            </div>
+            
+            <div class="ratio-progress-track">
+              @let expRatio = (dataService.totalExpenses() / (dataService.totalRevenue() || 1) * 100);
+              <div 
+                class="progress-fill-expense" 
+                [style.width.%]="expRatio > 100 ? 100 : expRatio"
+              ></div>
+            </div>
+            <p class="ratio-desc">
+              Your expenses consume <strong>{{ (dataService.totalExpenses() / (dataService.totalRevenue() || 1) * 100) | number:'1.0-1' }}%</strong> of total revenues generated. 
+              The remaining <strong>{{ (dataService.overallIncome() / (dataService.totalRevenue() || 1) * 100) | number:'1.0-1' }}%</strong> is your workshop net profitability margin.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    }
+
+  </div>
+</section>
+  </div>
