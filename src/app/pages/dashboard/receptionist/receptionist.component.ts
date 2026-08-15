@@ -191,10 +191,16 @@ advancePaymentMode: '',
       amount: +this.newOrder.amount || 0,
       diagnosisNotes: this.newOrder.diagnosisNotes.trim(),
       devicePassword: pwd,
+      passwordType: this.newOrder.passwordType !== 'none' ? this.newOrder.passwordType : undefined,
       spareParts: [],
       receivedDate: this.newOrder.receivedDate || undefined,
       receivedAddress: this.newOrder.receivedAddress.trim() || undefined,
+      prebookingDate: this.newOrder.bookingDate || undefined,
+      bookingSlot: this.newOrder.bookingSlot || undefined,
+      advanceAmount: this.newOrder.advanceAmount || undefined,
+      advancePaymentMode: this.newOrder.advancePaymentMode || undefined,
     });
+
 
     this.showCreateModal.set(false);
     this.createSuccess.set(true);

@@ -547,6 +547,61 @@
 .spare-status-ordered   { background: var(--warning-soft); color: var(--warning); }
 .spare-status-none      { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
 
+/* ===== Device Lock / Password ===== */
+.lock-display-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lock-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lock-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.lock-none     { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+.lock-pin      { background: var(--info-soft); color: var(--info); }
+.lock-pattern  { background: var(--warning-soft); color: var(--warning); }
+.lock-password { background: rgba(var(--primary-rgb, 99,102,241), 0.12); color: var(--primary); }
+
+/* ===== Booking Slot Badge ===== */
+.booking-slot-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(var(--primary-rgb, 99,102,241), 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ===== Advance Mode Badge ===== */
+.adv-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--success);
+  background: var(--success-soft);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+
 /* Spare status select in edit mode */
 .spare-status-select {
   padding: 5px 28px 5px 10px;

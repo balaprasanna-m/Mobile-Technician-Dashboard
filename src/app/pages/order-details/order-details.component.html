@@ -143,6 +143,24 @@
             </div>
 
             <div class="spec-item">
+              <span class="spec-label">Date Received</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <input class="edit-field-sm" type="date" [(ngModel)]="draft()!.receivedDate" />
+              } @else {
+                <span class="spec-value">{{ o.receivedDate || '—' }}</span>
+              }
+            </div>
+
+            <div class="spec-item" style="grid-column: 1 / -1;">
+              <span class="spec-label">Received At / Branch</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <input class="edit-field-sm" type="text" [(ngModel)]="draft()!.receivedAddress" placeholder="e.g. Main Branch – 12 Oxford St" />
+              } @else {
+                <span class="spec-value">{{ o.receivedAddress || '—' }}</span>
+              }
+            </div>
+
+            <div class="spec-item">
               <span class="spec-label">Assigned Technician</span>
               @if (editMode() && canEditDeviceCustomer) {
                 <select class="edit-select-sm" [(ngModel)]="draft()!.technician">
@@ -156,15 +174,6 @@
             </div>
 
             <div class="spec-item">
-              <span class="spec-label">Device Password</span>
-              @if (editMode() && canEditDeviceCustomer) {
-                <input class="edit-field-sm" type="text" [(ngModel)]="draft()!.devicePassword" placeholder="PIN or pattern hint" />
-              } @else {
-                <span class="spec-value">{{ o.devicePassword || '—' }}</span>
-              }
-            </div>
-
-            <div class="spec-item">
               <span class="spec-label">Order Status</span>
               @if (editMode()) {
                 <select class="edit-select-sm" [(ngModel)]="draft()!.status">
@@ -174,6 +183,41 @@
                 </select>
               } @else {
                 <span class="spec-value">{{ o.status }}</span>
+              }
+            </div>
+
+            <!-- Device Lock / Password -->
+            <div class="spec-item" style="grid-column: 1 / -1;">
+              <span class="spec-label">Device Lock / Password</span>
+              @if (editMode() && canEditDeviceCustomer) {
+                <div class="lock-edit-row">
+                  <select class="edit-select-sm" [(ngModel)]="draft()!.passwordType">
+                    <option value="none">None</option>
+                    <option value="pin">PIN / Passcode</option>
+                    <option value="pattern">Pattern</option>
+                    <option value="text">Password</option>
+                  </select>
+                  @if (draft()!.passwordType && draft()!.passwordType !== 'none') {
+                    <input class="edit-field-sm" type="text" [(ngModel)]="draft()!.devicePassword" placeholder="Enter value" />
+                  }
+                </div>
+              } @else {
+                <div class="lock-display-row">
+                  @if (!o.passwordType || o.passwordType === 'none') {
+                    <span class="lock-type-badge lock-none"><app-icon name="unlock" [size]="12"></app-icon> No Lock</span>
+                  } @else if (o.passwordType === 'pin') {
+                    <span class="lock-type-badge lock-pin"><app-icon name="hash" [size]="12"></app-icon> PIN / Passcode</span>
+                    <span class="spec-value mono">{{ o.devicePassword || '—' }}</span>
+                  } @else if (o.passwordType === 'pattern') {
+                    <span class="lock-type-badge lock-pattern"><app-icon name="grid" [size]="12"></app-icon> Pattern</span>
+                    <span class="spec-value">{{ o.devicePassword || '—' }}</span>
+                  } @else if (o.passwordType === 'text') {
+                    <span class="lock-type-badge lock-password"><app-icon name="lock" [size]="12"></app-icon> Password</span>
+                    <span class="spec-value">{{ o.devicePassword || '—' }}</span>
+                  } @else {
+                    <span class="spec-value">{{ o.devicePassword || '—' }}</span>
+                  }
+                </div>
               }
             </div>
 
@@ -272,6 +316,28 @@
                 <input class="edit-field-sm" type="date" [(ngModel)]="draft()!.prebookingDate" />
               } @else {
                 <span class="spec-value">{{ o.prebookingDate || '—' }}</span>
+              }
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Booking Slot</span>
+              @if (editMode() && canEditPrebooking) {
+                <select class="edit-select-sm" [(ngModel)]="draft()!.bookingSlot">
+                  <option value="">— No Slot —</option>
+                  <option value="09:00 AM - 11:00 AM">09:00 AM – 11:00 AM</option>
+                  <option value="11:00 AM - 01:00 PM">11:00 AM – 01:00 PM</option>
+                  <option value="02:00 PM - 04:00 PM">02:00 PM – 04:00 PM</option>
+                  <option value="04:00 PM - 06:00 PM">04:00 PM – 06:00 PM</option>
+                  <option value="06:00 PM - 08:00 PM">06:00 PM – 08:00 PM</option>
+                </select>
+              } @else {
+                @if (o.bookingSlot) {
+                  <span class="spec-value booking-slot-badge">
+                    <app-icon name="clock" [size]="12"></app-icon>
+                    {{ o.bookingSlot }}
+                  </span>
+                } @else {
+                  <span class="spec-value">—</span>
+                }
               }
             </div>
             <div class="spec-item">
@@ -718,6 +784,28 @@
                 <input class="edit-field-sm" type="number" [(ngModel)]="draft()!.advanceAmount" min="0" step="0.01" placeholder="0.00" />
               } @else {
                 <span class="contact-val">{{ o.advanceAmount ? formatAmount(o.advanceAmount) : '—' }}</span>
+              }
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Advance Payment Mode</span>
+              @if (editMode() && canEditPayment) {
+                <select class="edit-select-sm" [(ngModel)]="draft()!.advancePaymentMode">
+                  <option value="">— Select —</option>
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Credit Card">Credit Card</option>
+                  <option value="Debit Card">Debit Card</option>
+                  <option value="Net Banking">Net Banking</option>
+                </select>
+              } @else {
+                @if (o.advancePaymentMode) {
+                  <span class="contact-val adv-mode-badge">
+                    <app-icon name="payments" [size]="12"></app-icon>
+                    {{ o.advancePaymentMode }}
+                  </span>
+                } @else {
+                  <span class="contact-val">—</span>
+                }
               }
             </div>
             <div class="contact-item">

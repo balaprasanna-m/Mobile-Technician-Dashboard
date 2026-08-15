@@ -52,8 +52,9 @@ export interface Order {
   prebookingDate?: string;
   prebookingTime?: string;
   prebookingNotes?: string;
+  bookingSlot?: string;
   receivedDate?: string;
-receivedAddress?: string;
+  receivedAddress?: string;
   // Technician Work
   workStartDate?: string;
   workEndDate?: string;
@@ -71,6 +72,9 @@ deliveryDate?: string;
   advanceAmount?: number;
   advancePaidDate?: string;
   advancePaidBy?: string;
+  advancePaymentMode?: string;
+  // Device Lock
+  passwordType?: 'none' | 'pin' | 'pattern' | 'text';
 }
 
 export type PersonnelRole =
