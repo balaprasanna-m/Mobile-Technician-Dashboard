@@ -184,6 +184,46 @@
               </tbody>
             </table>
           </div>
+
+          <!-- ── Staff Mobile Cards (shown on small screens) ── -->
+          <div class="staff-cards">
+            @for (person of dataService.personnel(); track person.id) {
+              <div class="staff-card">
+                <div class="staff-card-head">
+                  <div class="staff-cell">
+                    <span class="avatar-sm">{{ person.name.slice(0, 2).toUpperCase() }}</span>
+                    <div>
+                      <span class="staff-name">{{ person.name }}</span>
+                      <span class="staff-email">{{ person.email }}</span>
+                    </div>
+                  </div>
+                  <span class="status-indicator" [class.active]="person.status === 'Active'">
+                    {{ person.status }}
+                  </span>
+                </div>
+                <div class="staff-card-body">
+                  <div class="staff-card-row">
+                    <span class="sc-key">Role</span>
+                    <span class="role-badge" [class]="person.role.toLowerCase().replace(' ', '-')">{{ person.role }}</span>
+                  </div>
+                  <div class="staff-card-row">
+                    <span class="sc-key">Phone</span>
+                    <span class="muted-cell">{{ person.phone || '—' }}</span>
+                  </div>
+                  <div class="staff-card-row">
+                    <span class="sc-key">Joined</span>
+                    <span class="muted-cell">{{ person.joinedDate }}</span>
+                  </div>
+                </div>
+                <div class="staff-card-footer">
+                  <button class="edit-btn" (click)="openEdit(person)" title="Edit personnel">
+                    <app-icon name="edit" [size]="14"></app-icon>
+                    Edit Personnel
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
         </div>
       </div>
     </div>

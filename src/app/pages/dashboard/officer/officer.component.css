@@ -48,7 +48,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow: visible; /* Allow table-wrap to scroll horizontally */
 }
 .panel-head {
   display: flex;
@@ -56,6 +56,8 @@
   justify-content: space-between;
   padding: 20px;
   border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-wrap: wrap;
 }
 .panel-title {
   font-size: 17px;
@@ -68,9 +70,12 @@
 
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 .orders-table {
   width: 100%;
+  min-width: 540px; /* Ensures table scrolls rather than squishes */
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -137,6 +142,67 @@
   .dashboard-grid {
     grid-template-columns: 1fr;
     gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .page-title {
+    font-size: 20px;
+  }
+  .panel-head {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .panel-title {
+    font-size: 15px;
+  }
+  .panel-sub {
+    font-size: 12px;
+  }
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .viewing-banner {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .viewing-role-badge {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Table horizontal scroll on mobile */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .orders-table {
+    min-width: 500px;
+  }
+  .page-title {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  .page-title {
+    font-size: 16px;
+  }
+  .card-value {
+    font-size: 22px;
+  }
+  .panel-head {
+    padding: 12px;
   }
 }
 

@@ -99,7 +99,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow: visible; /* Allow table-wrap to scroll horizontally */
 }
 .panel-head {
   display: flex;
@@ -107,6 +107,8 @@
   justify-content: space-between;
   padding: 20px;
   border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-wrap: wrap;
 }
 .panel-title {
   font-size: 17px;
@@ -130,9 +132,12 @@
 
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 .orders-table {
   width: 100%;
+  min-width: 560px; /* Ensures table scrolls rather than squishes */
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -269,8 +274,45 @@
   }
 }
 @media (max-width: 768px) {
-  .cards {
-    grid-template-columns: repeat(2, 1fr);
+  .page-head {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .page-title {
+    font-size: 20px;
+  }
+  .panel-head {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .panel-title {
+    font-size: 15px;
+  }
+  .panel-sub {
+    font-size: 12px;
+  }
+  .admin-tabs-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 4px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .admin-tabs-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .admin-tab {
+    font-size: 13px;
+    padding: 8px 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .closed-card {
+    height: auto;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
   }
 }
 @media (max-width: 640px) {
@@ -280,10 +322,20 @@
   .order-cards {
     display: flex;
   }
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .page-title {
+    font-size: 18px;
+  }
 }
 @media (max-width: 420px) {
   .cards {
     grid-template-columns: 1fr;
+  }
+  .admin-tab {
+    padding: 6px 10px;
+    font-size: 12px;
   }
 }
 

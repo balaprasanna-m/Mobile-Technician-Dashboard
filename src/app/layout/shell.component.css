@@ -365,7 +365,7 @@
   }
   .profile-meta.desktop-only { display: none; }
   .content {
-    padding: 16px 16px 92px;
+    padding: 16px 12px 92px;
   }
   .bottom-nav {
     position: fixed;
@@ -394,6 +394,24 @@
   }
   .bottom-item.active {
     color: var(--primary);
+  }
+  .navbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .content {
+    padding: 12px 10px 88px;
+  }
+  .navbar {
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .search {
+    padding: 7px 10px;
+    font-size: 13px;
   }
 }
 

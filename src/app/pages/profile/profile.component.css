@@ -30,6 +30,17 @@
   box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
+/* Staff panel needs to allow table scroll on mobile */
+.staff-panel {
+  overflow: visible;
+  border-radius: var(--radius);
+}
+/* Wrapper ensures table can scroll horizontally inside the panel */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
 
 /* ===== Left Column (User Card) ===== */
 .user-card {
@@ -318,11 +329,9 @@
 .mb-16 { margin-bottom: 16px; }
 
 /* ===== Staff Table ===== */
-.table-wrap {
-  overflow-x: auto;
-}
 .staff-table {
   width: 100%;
+  min-width: 580px; /* Ensures table scrolls rather than squishes on mobile */
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -671,12 +680,99 @@
   background: var(--surface-2);
 }
 
+/* ===== Mobile Staff Cards (hidden on desktop, shown on mobile) ===== */
+.staff-cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+.staff-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.staff-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 14px 10px;
+  flex-wrap: wrap;
+}
+.staff-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 14px 10px;
+  font-size: 13.5px;
+}
+.staff-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.sc-key {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.staff-card-footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+.staff-card-footer .edit-btn {
+  width: 100%;
+  justify-content: center;
+}
+
 /* ===== Responsive ===== */
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
   .profile-grid {
     grid-template-columns: 1fr;
   }
+  .profile-grid--single {
+    grid-template-columns: 1fr;
+  }
 }
+
+@media (max-width: 768px) {
+  .page-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .page-title {
+    font-size: 20px;
+  }
+  .panel-head-fl {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px;
+  }
+  .panel-title {
+    font-size: 15px;
+  }
+  .panel-sub {
+    font-size: 12px;
+  }
+  .btn-create {
+    width: 100%;
+    justify-content: center;
+  }
+  .user-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 640px) {
   .form-row {
     flex-direction: column;
@@ -684,5 +780,78 @@
   }
   .drawer {
     width: 100vw;
+  }
+  .user-info h2 {
+    font-size: 17px;
+  }
+  .contact-details {
+    padding: 0 14px 20px;
+  }
+  .add-staff-form {
+    padding: 14px;
+  }
+
+  /* Hide desktop table, show mobile cards */
+  .table-wrap {
+    display: none;
+  }
+  .staff-cards {
+    display: flex;
+  }
+
+  /* Form buttons responsive */
+  .form-buttons {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .form-buttons .btn-sec,
+  .form-buttons .btn-primary {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Drawer responsive */
+  .drawer-header {
+    padding: 14px 16px;
+  }
+  .drawer-body {
+    padding: 16px;
+  }
+  .drawer-footer {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .drawer-footer .btn-sec,
+  .drawer-footer .btn-primary {
+    flex: 1;
+    justify-content: center;
+  }
+  .status-toggle-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .page-title {
+    font-size: 18px;
+  }
+  .user-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 20px;
+  }
+  .stat-count {
+    font-size: 14px;
+  }
+  .stat-label {
+    font-size: 10px;
+  }
+  .panel-head-fl {
+    padding: 12px;
+  }
+  .staff-cards {
+    padding: 12px;
   }
 }
